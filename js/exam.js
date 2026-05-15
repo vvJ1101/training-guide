@@ -502,6 +502,7 @@
             ${urls.length < MAX_IMAGES_PER_NODE ? `
               <button class="uploadBtn" data-node="${n.id}">📷 上传截图</button>
               <button class="cameraBtn" data-node="${n.id}" style="background:#16a34a;">📸 拍照</button>
+              <button class="pasteBtn" data-node="${n.id}" style="background:#6d28d9;">📋 粘贴截图</button>
             ` : ''}
             <input type="file" accept="image/*" id="file-${n.id}" style="display:none;" multiple>
             <input type="file" accept="image/*" capture="environment" id="camera-${n.id}" style="display:none;">
@@ -524,6 +525,41 @@
       document.querySelectorAll('.cameraBtn').forEach(b => {
         b.addEventListener('click', function(){ document.getElementById('camera-'+this.dataset.node).click(); });
       });
+      // 粘贴截图
+      document.querySelectorAll('.pasteBtn').forEach(b => {
+        b.addEventListener('click', async function(){
+          const nodeId = this.dataset.node;
+          try {
+            const items = await navigator.clipboard.read();
+            let pasted = 0;
+            for (const item of items) {
+              if (!item.types.includes('image/png') && !item.types.includes('image/jpeg')) continue;
+              if (pasted >= MAX_IMAGES_PER_NODE) break;
+              const blob = await item.getType(item.types.find(t => t.startsWith('image/')));
+              const dataURL = await new Promise(resolve => {
+                const reader = new FileReader();
+                reader.onload = e => resolve(e.target.result);
+                reader.readAsDataURL(blob);
+              });
+              const current = ss[nodeId] || [];
+              if (current.length >= MAX_IMAGES_PER_NODE) break;
+              current.push(dataURL);
+              ss[nodeId] = current;
+              await saveNodeImgs(exam.taskId, nodeId, current);
+              pasted++;
+            }
+            if (pasted > 0) {
+              updateImgList(nodeId, ss[nodeId]);
+              renderProgress();
+              toast(`已粘贴 ${pasted} 张截图`);
+            } else {
+              toast('剪贴板中没有图片，请先用截图工具（如微信/QQ截图）复制图片');
+            }
+          } catch(e) {
+            toast('粘贴失败，请确认已复制图片到剪贴板');
+          }
+        });
+      });
       // 文件上传
       document.querySelectorAll('input[type=file]').forEach(input => {
         input.addEventListener('change', async function(e) {
@@ -531,7 +567,7 @@
           const files = Array.from(e.target.files);
           const current = ss[nodeId] || [];
           if (current.length + files.length > MAX_IMAGES_PER_NODE) return toast(`最多上传${MAX_IMAGES_PER_NODE}张图片`);
-          const btn = document.querySelector(`.uploadBtn[data-node="${nodeId}"]`) || document.querySelector(`.cameraBtn[data-node="${nodeId}"]`);
+          const btn = document.querySelector(`.uploadBtn[data-node="${nodeId}"]`) || document.querySelector(`.cameraBtn[data-node="${nodeId}"]`) || document.querySelector(`.pasteBtn[data-node="${nodeId}"]`);
           setLoading(btn, true);
           for (const file of files) {
             const dataURL = await compressImage(file);
@@ -601,8 +637,10 @@
       }));
       const ub = document.querySelector(`.uploadBtn[data-node="${nodeId}"]`);
       const cb = document.querySelector(`.cameraBtn[data-node="${nodeId}"]`);
+      const pb = document.querySelector(`.pasteBtn[data-node="${nodeId}"]`);
       if (ub) ub.style.display = (arr||[]).length < MAX_IMAGES_PER_NODE ? 'inline-block' : 'none';
       if (cb) cb.style.display = (arr||[]).length < MAX_IMAGES_PER_NODE ? 'inline-block' : 'none';
+      if (pb) pb.style.display = (arr||[]).length < MAX_IMAGES_PER_NODE ? 'inline-block' : 'none';
     }
 
     renderNodeUI();
