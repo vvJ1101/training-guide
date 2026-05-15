@@ -576,9 +576,12 @@
 
   // ========== 模板管理 ==========
   function renderTemplateManager() {
-    const templates = getTemplates();
-    const grouped = { cloud:[], spot:[], future:[] };
-    templates.forEach(t => { if (grouped[t.type]) grouped[t.type].push(t); });
+    let templates = getTemplates();
+    // 首次打开自动生成12个模板
+    if (templates.length === 0) {
+      generateTemplateLibrary();
+      templates = getTemplates();
+    }
 
     function renderList() {
       const tpls = getTemplates();
