@@ -1,0 +1,378 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: "Microsoft YaHei", "苹方", "PingFang SC", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  background: #f5f7fa;
+  color: #333;
+  line-height: 1.7;
+  padding: 2rem 1rem;
+}
+
+.container {
+  max-width: 1000px;
+  margin: 0 auto;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
+  padding: 2.5rem 3rem;
+}
+
+h1 {
+  text-align: center;
+  font-size: 2.2rem;
+  color: #1a2b4c;
+  margin-bottom: 1rem;
+  border-bottom: 3px solid #2d6ee0;
+  padding-bottom: 0.8rem;
+}
+
+/* 目录导航 */
+.toc {
+  background: #f8fafd;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1.2rem 1.8rem;
+  margin: 1.5rem 0 2rem;
+}
+
+.toc h3 {
+  margin-top: 0;
+  color: #1e3a6f;
+}
+
+.toc ol {
+  margin-left: 1.5rem;
+}
+
+.toc li {
+  margin-bottom: 0.3rem;
+}
+
+.toc a {
+  text-decoration: none;
+  color: #2d6ee0;
+  font-weight: 500;
+}
+
+.toc a:hover {
+  text-decoration: underline;
+}
+
+h2 {
+  font-size: 1.6rem;
+  color: #1e3a6f;
+  margin: 2.5rem 0 1.2rem;
+  padding-left: 0.5rem;
+  border-left: 6px solid #2d6ee0;
+}
+
+h3 {
+  font-size: 1.3rem;
+  color: #2c3e50;
+  margin: 1.8rem 0 0.8rem;
+}
+
+p, li {
+  font-size: 1rem;
+  margin-bottom: 0.6rem;
+}
+
+ul, ol {
+  margin-left: 1.8rem;
+  margin-bottom: 1.2rem;
+}
+
+li {
+  margin-bottom: 0.3rem;
+}
+
+strong, b {
+  color: #c44536;
+  font-weight: 700;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  font-size: 0.95rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+th {
+  background: #2d6ee0;
+  color: white;
+  padding: 12px 8px;
+  text-align: center;
+  font-weight: 600;
+}
+
+td {
+  border: 1px solid #e2e8f0;
+  padding: 10px 8px;
+  vertical-align: top;
+  background: #fff;
+}
+
+tr:nth-child(even) td {
+  background: #f8fafd;
+}
+
+td:first-child {
+  font-weight: 700;
+  color: #1e3a6f;
+}
+
+.screenshot-img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 1.8rem auto 0.5rem;
+  border: 2px solid #d0d7de;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  background: #f0f4ff;
+}
+
+.caption {
+  text-align: center;
+  font-size: 0.9rem;
+  color: #5a6b7a;
+  margin-bottom: 1.2rem;
+  font-weight: 500;
+}
+
+/* 警告框 */
+.highlight-box {
+  background: #fff3e0;
+  border-left: 6px solid #e65100;
+  padding: 1rem 1.5rem;
+  margin: 1.2rem 0;
+  border-radius: 0 6px 6px 0;
+  font-weight: 500;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.highlight-box::before {
+  content: "⚠️";
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+/* 提示框 */
+.note-box {
+  background: #e3f2fd;
+  border-left: 6px solid #1565c0;
+  padding: 1rem 1.5rem;
+  margin: 1.2rem 0;
+  border-radius: 0 6px 6px 0;
+  font-weight: 500;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.note-box::before {
+  content: "💡";
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+/* 流程图文字 */
+.flow-text {
+  background: #f0f4f8;
+  padding: 1.2rem 1.5rem;
+  border-radius: 8px;
+  font-family: "Courier New", monospace;
+  white-space: pre-line;
+  line-height: 2;
+  margin: 1rem 0;
+  border: 1px solid #d0d7de;
+}
+
+/* 页脚 */
+.footer {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-top: 3rem;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 1.5rem;
+}
+
+.footer .print-btn {
+  display: inline-block;
+  margin-top: 0.5rem;
+  padding: 0.4rem 1rem;
+  background: #2d6ee0;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.footer .print-btn:hover {
+  background: #1b4fc4;
+}
+
+/* 图片占位 */
+.img-placeholder {
+  text-align: center;
+  padding: 2rem;
+  background: #f0f4ff;
+  border: 2px dashed #2d6ee0;
+  border-radius: 8px;
+  margin: 1.8rem 0;
+  color: #5a6b7a;
+  font-size: 1rem;
+  min-height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 回到顶部 */
+.back-to-top {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  width: 44px;
+  height: 44px;
+  background: #2d6ee0;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  font-size: 1.3rem;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  opacity: 0;
+  visibility: hidden;
+  transition: 0.3s;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.back-to-top.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+.back-to-top:hover {
+  background: #1b4fc4;
+  transform: translateY(-2px);
+}
+
+/* 搜索框 */
+.search-box {
+  margin: 1rem 0 1.5rem;
+}
+
+.search-box input {
+  width: 100%;
+  padding: 0.7rem 1rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: 0.2s;
+  font-family: inherit;
+}
+
+.search-box input:focus {
+  outline: none;
+  border-color: #2d6ee0;
+  box-shadow: 0 0 0 3px rgba(45, 110, 224, 0.1);
+}
+
+.search-highlight {
+  background: #fff3cd;
+  padding: 0 2px;
+  border-radius: 2px;
+}
+
+.search-result-count {
+  text-align: center;
+  font-size: 0.85rem;
+  color: #64748b;
+  margin-top: 0.3rem;
+}
+
+/* 公司水印 */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: url('../images/LOGO.png') center 45% no-repeat;
+  background-size: min(380px, 50vw) auto;
+  opacity: 0.07;
+  pointer-events: none;
+  z-index: 999;
+}
+
+/* 打印样式 */
+@media print {
+  .back-to-top,
+  .footer .print-btn,
+  .search-box {
+    display: none !important;
+  }
+
+  body::after {
+    display: none;
+  }
+
+  body {
+    background: white;
+    padding: 0;
+  }
+
+  .container {
+    box-shadow: none;
+    border-radius: 0;
+    padding: 1rem;
+  }
+
+  .screenshot-img {
+    border: 1px solid #ccc;
+    box-shadow: none;
+  }
+
+  .highlight-box,
+  .note-box {
+    background: #f9f9f9;
+    border-left: 2px solid #333;
+  }
+
+  .toc,
+  .footer {
+    display: none;
+  }
+
+  h2 {
+    border-left: none;
+    padding-left: 0;
+  }
+}
+
+@media (max-width: 640px) {
+  .container {
+    padding: 1.5rem;
+  }
+
+  table {
+    font-size: 0.8rem;
+  }
+}
