@@ -273,6 +273,7 @@
         </div>
         <button id="loginBtn" class="success" style="width:100%;">登录</button>
         <button id="resetDataBtn" class="secondary danger" style="width:100%;margin-top:0.5rem;">重置所有数据</button>
+        <a href="index.html" style="display:block;text-align:center;color:#2d6ee0;font-weight:600;margin-top:0.8rem;">📖 查看培训文档</a>
       </div>
     `;
 
