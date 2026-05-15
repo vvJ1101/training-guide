@@ -380,14 +380,14 @@
     return [...LIANXIN_NODES, ...base, ...extra, ...custom];
   }
 
-  // ========== 登录状态持久化 ==========
+  // ========== 登录状态持久化（localStorage，关浏览器也不丢失） ==========
   function saveLogin() {
-    if (currentUser) sessionStorage.setItem('login', JSON.stringify(currentUser));
-    else sessionStorage.removeItem('login');
+    if (currentUser) localStorage.setItem('loginData', JSON.stringify(currentUser));
+    else localStorage.removeItem('loginData');
   }
   function restoreLogin() {
     try {
-      const saved = sessionStorage.getItem('login');
+      const saved = localStorage.getItem('loginData');
       if (saved) { currentUser = JSON.parse(saved); return true; }
     } catch(e) {}
     return false;
@@ -396,7 +396,7 @@
   // ========== 登录界面 ==========
   function renderLogin() {
     currentUser = null;
-    sessionStorage.removeItem('login');
+    localStorage.removeItem('loginData');
     app.innerHTML = `
       <h1>市场部系统操作考核 v2.4</h1>
       <div style="max-width:400px;margin:2rem auto;">
