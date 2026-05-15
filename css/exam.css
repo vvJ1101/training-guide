@@ -43,6 +43,13 @@ button.success:hover { background: #15803d; }
   border-radius: 8px; padding: 1.2rem; margin-bottom: 1rem;
 }
 .card.active { border-color: #2d6ee0; background: #f0f4ff; }
+
+/* 模板卡片 */
+.tpl-card { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; }
+.tpl-card .tpl-info { flex: 1; min-width: 200px; }
+.tpl-card .tpl-name-row { display: flex; align-items: center; gap: 0.5rem; }
+.tpl-card .tpl-actions { display: flex; gap: 0.3rem; flex-shrink: 0; flex-wrap: wrap; }
+
 .img-list { display: flex; flex-wrap: wrap; gap: 10px; margin: 0.8rem 0; }
 .img-item { position: relative; max-width: 150px; cursor: pointer; }
 .img-item img { width: 100%; border-radius: 6px; border: 1px solid #ccc; display: block; }

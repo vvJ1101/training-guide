@@ -7,7 +7,6 @@
   const MAX_IMAGE_WIDTH = 1920;
   const IMAGE_QUALITY = 0.8;
 
-  // 简单哈希（非加密，仅避免明文暴露）
   function hashStr(s) {
     let h = 0;
     for (let i = 0; i < s.length; i++) { h = ((h<<5)-h) + s.charCodeAt(i); h |= 0; }
@@ -21,7 +20,7 @@
     { id:'lx_product_audit', name:'联欣商品审核', guide:'上传订单详情/商品审核界面截图，确认商品清单、折扣、收货人信息、订单比例' }
   ];
 
-  // 康雷核心节点
+  // 康雷核心节点（按订单类型）
   const KANGLEI_NODES = {
     cloud: [
       { id:'checkOrder', name:'检查渠道订单', guide:'渠道订单检查界面，需清晰显示订单号、客户名称、商品信息' },
@@ -34,18 +33,22 @@
     future: [
       { id:'deposit', name:'期货订金处理', guide:'订金收入单编辑界面，需显示订单号、付款方式' },
       { id:'finalPayment', name:'尾款处理（转回款）', guide:'转回款操作界面，需包含付款方式、收款金额、凭证上传' },
-      { id:'balance', name:'使用余额支付', guide:'余额转入界面，需显示余额账号、支付额度、余额使用截图' },
-      { id:'recharge', name:'余额充值', guide:'余额充值操作界面，需显示品牌余额账号、充值金额、凭证' }
+      { id:'balance', name:'使用余额支付', guide:'余额转入界面，需显示余额账号、支付额度、余额使用截图' }
     ]
   };
 
+  // 通用可选节点（所有订单类型都可选用）
   const EXTRA_NODES = [
+    { id:'recharge', name:'余额充值', guide:'余额充值操作界面，需显示品牌余额账号、充值金额、凭证' },
     { id:'express', name:'快递单据', guide:'上传快递单或物流信息截图' },
-    { id:'tax', name:'税费凭证', guide:'上传税单或税费相关截图' }
+    { id:'taxDoc', name:'税费凭证', guide:'上传税单或税费相关截图' }
   ];
 
-  const PAYMENT_OPTIONS = ['', '寄付', '到付'];
-  const TAX_OPTIONS = ['', '含税', '不含税'];
+  const LOGISTICS_OPTIONS = ['寄付', '到付'];
+  const TAX_OPTIONS = ['含税', '不含税'];
+
+  // 订单类型中文映射
+  const TYPE_LABELS = { cloud:'云仓', spot:'现货', future:'期货' };
 
   // ========== IndexedDB 截图存储 ==========
   const DB_NAME = 'ExamDB_v2';
@@ -117,7 +120,6 @@
     });
   }
 
-  // 截图缓存（当前会话）
   const _ssCache = new Map();
 
   async function loadScreenshots(examId) {
@@ -127,10 +129,6 @@
     return _ssCache.get(examId);
   }
 
-  function getCached(examId, nodeId) {
-    return (_ssCache.get(examId) || {})[nodeId] || [];
-  }
-
   async function saveNodeImgs(examId, nodeId, urls) {
     const all = _ssCache.get(examId) || {};
     all[nodeId] = urls;
@@ -138,7 +136,6 @@
     await imgSet(examId, nodeId, urls);
   }
 
-  // 迁移旧数据（localStorage → IndexedDB）
   async function migrateOldData() {
     const exams = getExamsRaw();
     let changed = false;
@@ -169,7 +166,7 @@
   let currentUser = null;
   const app = document.getElementById('app');
 
-  // ========== Toast（堆叠） ==========
+  // ========== Toast ==========
   const toastContainer = document.getElementById('toast-container');
   function toast(msg, d = 2500) {
     const el = document.createElement('div');
@@ -240,7 +237,35 @@
     return [...LIANXIN_NODES, ...base, ...extra, ...custom];
   }
 
-  // ========== 登录状态持久化（localStorage，关浏览器也不丢失） ==========
+  // ========== 模板智能命名 ==========
+  function makeTemplateName(type, logistics, tax) {
+    const parts = [TYPE_LABELS[type]];
+    if (logistics) parts.push(logistics);
+    if (tax) parts.push(tax);
+    return parts.join('-');
+  }
+
+  // ========== 一键生成题库模板 ==========
+  function generateTemplateLibrary() {
+    const types = ['cloud', 'spot', 'future'];
+    const all = getTemplates();
+    let added = 0;
+    for (const type of types) {
+      for (const logistics of LOGISTICS_OPTIONS) {
+        for (const tax of TAX_OPTIONS) {
+          const name = makeTemplateName(type, logistics, tax);
+          if (!all.find(t => t.name === name)) {
+            all.push({ name, type, logistics, tax, extraNodes: [], customNodes: [] });
+            added++;
+          }
+        }
+      }
+    }
+    saveTemplates(all);
+    return added;
+  }
+
+  // ========== 登录状态持久化 ==========
   function saveLogin() {
     if (currentUser) localStorage.setItem('loginData', JSON.stringify(currentUser));
     else localStorage.removeItem('loginData');
@@ -258,7 +283,7 @@
     currentUser = null;
     localStorage.removeItem('loginData');
     app.innerHTML = `
-      <h1>市场部系统操作考核 v2.4</h1>
+      <h1>市场部系统操作考核 v2.5</h1>
       <div style="max-width:400px;margin:2rem auto;">
         <div class="form-group"><label>角色</label><select id="roleSelect"><option value="">-- 请选择 --</option><option value="examiner">考核官</option><option value="candidate">答题者</option></select></div>
         <div class="form-group"><label>用户名</label><input type="text" id="usernameInput" placeholder="工号或姓名"></div>
@@ -354,7 +379,7 @@
       <h2>考核任务列表</h2>
       <div style="overflow-x:auto;">
       <table class="task-list">
-        <thead><tr><th>任务ID</th><th>订单类型</th><th>答题者</th><th>支付/税费</th><th>状态</th><th>创建时间</th><th>操作</th></tr></thead>
+        <thead><tr><th>任务ID</th><th>订单类型</th><th>答题者</th><th>物流/税费</th><th>状态</th><th>创建时间</th><th>操作</th></tr></thead>
         <tbody id="taskTable"></tbody>
       </table>
       </div>
@@ -392,12 +417,12 @@
       ? '<tr><td colspan="7" style="text-align:center;color:#94a3b8;padding:2rem;">暂无记录</td></tr>'
       : filtered.map(e => {
           const statusLabel = e.status === EXAM_STATUS.SUBMITTED ? '已提交' : e.status === EXAM_STATUS.REVIEWED ? '已审核' : '待提交';
-          const typeLabel = e.type === 'cloud' ? '云仓' : e.type === 'spot' ? '现货' : '期货';
+          const logistics = e.logistics || e.payment || ''; // 兼容旧数据 payment → logistics
           return `<tr>
             <td>${e.taskId}</td>
-            <td>${typeLabel}</td>
+            <td>${TYPE_LABELS[e.type]||e.type}</td>
             <td>${e.candidateName}</td>
-            <td>${e.payment||'-'} / ${e.tax||'-'}</td>
+            <td>${logistics||'-'} / ${e.tax||'-'}</td>
             <td>${statusLabel}</td>
             <td>${new Date(e.createTime).toLocaleString()}</td>
             <td>
@@ -413,6 +438,9 @@
   function renderCreateExam(template = null) {
     const templates = getTemplates();
     let tempCustomNodes = template?.customNodes ? template.customNodes.map(c => ({ ...c })) : [];
+
+    // 智能建议的考核名称
+    const suggestedName = template ? template.name + '-' : '';
 
     function renderCustomList() {
       const container = document.getElementById('customNodesList');
@@ -440,6 +468,10 @@
       el.innerHTML = `<strong>本次考核节点预览（共${all.length}个）：</strong><br>` + all.map((n,i)=>`${i+1}. ${n.name}`).join('<br>');
     }
 
+    // 按类型分组模板
+    const groupedTpls = { cloud:[], spot:[], future:[] };
+    templates.forEach(t => { if (groupedTpls[t.type]) groupedTpls[t.type].push(t); });
+
     const extraChecks = EXTRA_NODES.map(n =>
       `<label style="display:inline;margin-right:1rem;"><input type="checkbox" value="${n.id}" id="extra_${n.id}" ${template?.extraNodes?.includes(n.id)?'checked':''}> ${n.name}</label>`
     ).join('');
@@ -448,14 +480,18 @@
       <h1>创建新考核</h1>
       <p style="color:#1e3a6f;font-weight:600;">✅ 已包含联欣审核节点（订单筛选、商品审核），无需额外选择</p>
       ${templates.length > 0 ? `
-      <div class="form-row"><div class="form-group"><label>使用模板</label><select id="templateSelect"><option value="">-- 手动设置 --</option>${templates.map(t=>`<option value="${t.name}">${t.name}</option>`).join('')}</select></div></div>` : ''}
+      <div class="form-row"><div class="form-group"><label>使用模板</label><select id="templateSelect"><option value="">-- 手动设置 --</option>
+        <optgroup label="云仓">${groupedTpls.cloud.map(t=>`<option value="${t.name}">${t.name}</option>`).join('')}</optgroup>
+        <optgroup label="现货">${groupedTpls.spot.map(t=>`<option value="${t.name}">${t.name}</option>`).join('')}</optgroup>
+        <optgroup label="期货">${groupedTpls.future.map(t=>`<option value="${t.name}">${t.name}</option>`).join('')}</optgroup>
+      </select></div></div>` : ''}
       <div class="form-row">
         <div class="form-group"><label>订单类型</label><select id="examType"><option value="cloud">云仓</option><option value="spot">现货</option><option value="future">期货</option></select></div>
-        <div class="form-group"><label>支付方式</label><select id="paymentSelect">${PAYMENT_OPTIONS.map(v=>`<option value="${v}">${v||'无'}</option>`).join('')}</select></div>
-        <div class="form-group"><label>税费情况</label><select id="taxSelect">${TAX_OPTIONS.map(v=>`<option value="${v}">${v||'无'}</option>`).join('')}</select></div>
+        <div class="form-group"><label>物流方式</label><select id="logisticsSelect">${LOGISTICS_OPTIONS.map(v=>`<option value="${v}">${v}</option>`).join('')}</select></div>
+        <div class="form-group"><label>税费情况</label><select id="taxSelect">${TAX_OPTIONS.map(v=>`<option value="${v}">${v}</option>`).join('')}</select></div>
       </div>
-      <div class="form-group"><label>答题者姓名</label><input type="text" id="candidateNameInput"></div>
-      <div class="form-group"><label>可选附加节点（康雷环节）</label><div>${extraChecks}</div></div>
+      <div class="form-group"><label>答题者姓名</label><input type="text" id="candidateNameInput" placeholder="${suggestedName ? '建议：'+suggestedName+'...' : ''}"></div>
+      <div class="form-group"><label>可选附加节点（所有类型通用）</label><div>${extraChecks}</div></div>
       <div class="form-group">
         <label>📝 自定义考核节点</label>
         <div class="form-row" style="align-items:center;">
@@ -495,11 +531,11 @@
       const candidate = document.getElementById('candidateNameInput').value.trim();
       if (!candidate) return toast('请输入答题者姓名');
       const type = document.getElementById('examType').value;
-      const payment = document.getElementById('paymentSelect').value;
+      const logistics = document.getElementById('logisticsSelect').value;
       const tax = document.getElementById('taxSelect').value;
       const extra = EXTRA_NODES.filter(n => document.getElementById('extra_'+n.id).checked).map(n => n.id);
       const newExam = {
-        taskId: generateId(), type, payment, tax, extraNodes: extra,
+        taskId: generateId(), type, logistics, tax, extraNodes: extra,
         candidateName: candidate, status: EXAM_STATUS.PENDING, createTime: Date.now(),
         screenshots: null, reviewResults: {}, nodeComments: {}, comment: '',
         customNodes: tempCustomNodes.map(c => ({ id:c.id, name:c.name, guide:c.guide }))
@@ -512,13 +548,14 @@
     });
 
     document.getElementById('saveTemplateBtn').addEventListener('click', ()=>{
-      const name = prompt('模板名称：');
-      if (!name) return;
       const type = document.getElementById('examType').value;
-      const payment = document.getElementById('paymentSelect').value;
+      const logistics = document.getElementById('logisticsSelect').value;
       const tax = document.getElementById('taxSelect').value;
+      const autoName = makeTemplateName(type, logistics, tax);
+      const name = prompt('模板名称：', autoName);
+      if (!name) return;
       const extra = EXTRA_NODES.filter(n => document.getElementById('extra_'+n.id).checked).map(n => n.id);
-      const t = { name, type, payment, tax, extraNodes: extra, customNodes: tempCustomNodes.map(c => ({ id:c.id, name:c.name, guide:c.guide })) };
+      const t = { name, type, logistics, tax, extraNodes: extra, customNodes: tempCustomNodes.map(c => ({ id:c.id, name:c.name, guide:c.guide })) };
       const all = getTemplates();
       if (all.find(x => x.name === name)) return toast('模板名称已存在');
       all.push(t); saveTemplates(all);
@@ -529,8 +566,8 @@
 
     if (template) {
       document.getElementById('examType').value = template.type;
-      document.getElementById('paymentSelect').value = template.payment || '';
-      document.getElementById('taxSelect').value = template.tax || '';
+      document.getElementById('logisticsSelect').value = template.logistics || LOGISTICS_OPTIONS[0];
+      document.getElementById('taxSelect').value = template.tax || TAX_OPTIONS[0];
       if (template.extraNodes) template.extraNodes.forEach(id => { const cb = document.getElementById('extra_'+id); if (cb) cb.checked = true; });
       renderCustomList();
       updateNodePreview();
@@ -540,24 +577,224 @@
   // ========== 模板管理 ==========
   function renderTemplateManager() {
     const templates = getTemplates();
+    const grouped = { cloud:[], spot:[], future:[] };
+    templates.forEach(t => { if (grouped[t.type]) grouped[t.type].push(t); });
+
+    function renderList() {
+      const tpls = getTemplates();
+      const g = { cloud:[], spot:[], future:[] };
+      tpls.forEach(t => { if (g[t.type]) g[t.type].push(t); });
+
+      const sections = [
+        { type:'cloud', label:'☁️ 云仓', color:'#e3f2fd' },
+        { type:'spot', label:'📦 现货', color:'#fff3e0' },
+        { type:'future', label:'📅 期货', color:'#fce4ec' }
+      ];
+
+      let html = '';
+      for (const s of sections) {
+        const items = g[s.type];
+        html += `<div style="margin-bottom:1.5rem;"><h3 style="color:#1e3a6f;border-left:6px solid #2d6ee0;padding-left:0.5rem;">${s.label}（${items.length}个）</h3>`;
+        if (items.length === 0) {
+          html += '<p style="color:#94a3b8;padding:0.5rem 1rem;">暂无模板</p>';
+        } else {
+          html += items.map(t => {
+            const nodes = getFullNodes({ type: t.type, extraNodes: t.extraNodes||[], customNodes:t.customNodes||[] });
+            return `<div class="card tpl-card" data-name="${t.name}" style="background:${s.color};">
+              <div class="tpl-info">
+                <div class="tpl-name-row">
+                  <strong class="tpl-name-text">${t.name}</strong>
+                  <button class="renameTplBtn" data-name="${t.name}" title="改名" style="padding:0.2rem 0.5rem;font-size:0.8rem;">✏️</button>
+                </div>
+                <div style="font-size:0.85rem;color:#64748b;margin-top:0.3rem;">
+                  物流：${t.logistics||'未设'} | 税费：${t.tax||'未设'} | 节点：${nodes.map(n=>n.name).join(' → ')}
+                </div>
+              </div>
+              <div class="tpl-actions" style="display:flex;gap:0.3rem;flex-shrink:0;">
+                <button class="editTplBtn" data-name="${t.name}" style="padding:0.3rem 0.8rem;font-size:0.85rem;">编辑</button>
+                <button class="useTplBtn success" data-name="${t.name}" style="padding:0.3rem 0.8rem;font-size:0.85rem;">创建考核</button>
+                <button class="delTplBtn danger" data-name="${t.name}" style="padding:0.3rem 0.8rem;font-size:0.85rem;">删除</button>
+              </div>
+            </div>`;
+          }).join('');
+        }
+        html += '</div>';
+      }
+      document.getElementById('tplListContainer').innerHTML = html;
+      bindTplEvents();
+    }
+
+    function bindTplEvents() {
+      // 改名
+      document.querySelectorAll('.renameTplBtn').forEach(b => b.addEventListener('click', function(e){
+        e.stopPropagation();
+        const oldName = this.dataset.name;
+        const card = document.querySelector(`.tpl-card[data-name="${oldName}"]`);
+        const nameEl = card.querySelector('.tpl-name-text');
+        const current = nameEl.textContent;
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.value = current;
+        input.style.cssText = 'font-weight:700;font-size:1rem;padding:0.2rem 0.4rem;border:2px solid #2d6ee0;border-radius:4px;width:80%;';
+        nameEl.replaceWith(input);
+        input.focus();
+        input.select();
+        const save = () => {
+          const newName = input.value.trim();
+          if (!newName || newName === current) { renderList(); return; }
+          const tpls = getTemplates();
+          if (tpls.find(x => x.name === newName)) { toast('模板名称已存在'); renderList(); return; }
+          const t = tpls.find(x => x.name === oldName);
+          if (t) t.name = newName;
+          saveTemplates(tpls);
+          renderList();
+          toast('模板已改名');
+        };
+        input.addEventListener('blur', save);
+        input.addEventListener('keydown', e => { if (e.key==='Enter') save(); if (e.key==='Escape') renderList(); });
+      }));
+
+      // 编辑模板
+      document.querySelectorAll('.editTplBtn').forEach(b => b.addEventListener('click', function(){
+        const tpls = getTemplates();
+        const t = tpls.find(x => x.name === this.dataset.name);
+        if (!t) return;
+        editTemplateModal(t);
+      }));
+
+      // 使用模板创建考核
+      document.querySelectorAll('.useTplBtn').forEach(b => b.addEventListener('click', function(){
+        const tpls = getTemplates();
+        const t = tpls.find(x => x.name === this.dataset.name);
+        if (t) renderCreateExam(t);
+      }));
+
+      // 删除
+      document.querySelectorAll('.delTplBtn').forEach(b => b.addEventListener('click', function(){
+        if (!confirm('确定删除模板"' + this.dataset.name + '"？')) return;
+        let tpls = getTemplates();
+        tpls = tpls.filter(x => x.name !== this.dataset.name);
+        saveTemplates(tpls);
+        renderList();
+        toast('模板已删除');
+      }));
+    }
+
     app.innerHTML = `
       <h1>模板管理</h1>
-      ${templates.length === 0 ? '<p style="color:#94a3b8;text-align:center;padding:2rem;">暂无模板</p>' : templates.map(t => `
-        <div class="card" style="display:flex;justify-content:space-between;align-items:center;">
-          <div><strong>${t.name}</strong> | ${t.type==='cloud'?'云仓':t.type==='spot'?'现货':'期货'} | 支付:${t.payment||'无'} | 税费:${t.tax||'无'} | ${(t.customNodes||[]).map(c=>c.name).join(',')||'无自定义节点'}</div>
-          <button class="delTplBtn danger" data-name="${t.name}" style="padding:0.3rem 0.8rem;">删除</button>
-        </div>
-      `).join('')}
-      <button id="backToDash" class="secondary">返回</button>
+      <div class="no-print" style="margin-bottom:1.5rem;">
+        <button id="genTplBtn" class="success">🎯 一键生成12个题库模板</button>
+        <button id="backToDash" class="secondary">返回</button>
+      </div>
+      <div id="tplListContainer"></div>
     `;
+    renderList();
     document.getElementById('backToDash').addEventListener('click', ()=>renderExaminerDashboard());
-    document.querySelectorAll('.delTplBtn').forEach(b => b.addEventListener('click', function(){
-      let tpls = getTemplates();
-      tpls = tpls.filter(x => x.name !== this.dataset.name);
+    document.getElementById('genTplBtn').addEventListener('click', ()=>{
+      const cnt = generateTemplateLibrary();
+      if (cnt > 0) { renderList(); toast(`已生成 ${cnt} 个新模板`); }
+      else toast('所有模板已存在，无需生成');
+    });
+  }
+
+  // ========== 模板编辑弹窗 ==========
+  function editTemplateModal(template) {
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+
+    const tempCustomNodes = (template.customNodes || []).map(c => ({ ...c }));
+    const tempExtra = [...(template.extraNodes || [])];
+
+    function renderNodePreview() {
+      const type = document.getElementById('editTplType').value;
+      const base = KANGLEI_NODES[type] || [];
+      const extras = EXTRA_NODES.filter(n => tempExtra.includes(n.id));
+      const all = [...LIANXIN_NODES, ...base, ...extras, ...tempCustomNodes];
+      const el = document.getElementById('editNodePreview');
+      if (el) el.innerHTML = `<strong>节点预览（共${all.length}个）：</strong><br>` + all.map((n,i)=>`${i+1}. ${n.name}`).join('<br>');
+    }
+
+    function renderCustomList() {
+      const c = document.getElementById('editCustomNodes');
+      if (!c) return;
+      c.innerHTML = tempCustomNodes.map((n,idx) => `
+        <div class="card" style="display:flex;justify-content:space-between;align-items:center;padding:0.8rem;">
+          <div><strong>${n.name}</strong> — ${n.guide}</div>
+          <button class="delCustomBtn danger" data-idx="${idx}" style="padding:0.3rem 0.8rem;">删除</button>
+        </div>
+      `).join('');
+      c.querySelectorAll('.delCustomBtn').forEach(b => b.addEventListener('click', function(){
+        tempCustomNodes.splice(parseInt(this.dataset.idx), 1);
+        renderCustomList();
+        renderNodePreview();
+      }));
+    }
+
+    const extraChecks = EXTRA_NODES.map(n =>
+      `<label style="display:inline;margin-right:1rem;"><input type="checkbox" value="${n.id}" id="editExtra_${n.id}" ${tempExtra.includes(n.id)?'checked':''}> ${n.name}</label>`
+    ).join('');
+
+    overlay.innerHTML = `
+      <div class="modal-content">
+        <h2>编辑模板：${template.name}</h2>
+        <div class="form-group"><label>模板名称</label><input type="text" id="editTplName" value="${template.name}"></div>
+        <div class="form-row">
+          <div class="form-group"><label>订单类型</label><select id="editTplType"><option value="cloud" ${template.type==='cloud'?'selected':''}>云仓</option><option value="spot" ${template.type==='spot'?'selected':''}>现货</option><option value="future" ${template.type==='future'?'selected':''}>期货</option></select></div>
+          <div class="form-group"><label>物流方式</label><select id="editTplLogistics">${LOGISTICS_OPTIONS.map(v=>`<option value="${v}" ${template.logistics===v?'selected':''}>${v}</option>`).join('')}</select></div>
+          <div class="form-group"><label>税费情况</label><select id="editTplTax">${TAX_OPTIONS.map(v=>`<option value="${v}" ${template.tax===v?'selected':''}>${v}</option>`).join('')}</select></div>
+        </div>
+        <div class="form-group"><label>通用附加节点</label><div>${extraChecks}</div></div>
+        <div class="form-group">
+          <label>📝 自定义节点</label>
+          <div class="form-row" style="align-items:center;">
+            <input type="text" id="editCustomName" placeholder="节点名称" style="flex:1;">
+            <input type="text" id="editCustomGuide" placeholder="操作指引" style="flex:2;">
+            <button id="editAddCustomBtn" style="white-space:nowrap;">添加</button>
+          </div>
+          <div id="editCustomNodes"></div>
+        </div>
+        <div id="editNodePreview" style="background:#f0f4ff;padding:1rem;border-radius:8px;margin-bottom:1rem;"></div>
+        <button id="editSaveBtn" class="success">保存修改</button>
+        <button id="editCancelBtn" class="secondary">取消</button>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+
+    document.getElementById('editTplType').addEventListener('change', renderNodePreview);
+    document.getElementById('editAddCustomBtn').addEventListener('click', ()=>{
+      const n = document.getElementById('editCustomName').value.trim();
+      const g = document.getElementById('editCustomGuide').value.trim();
+      if (!n || !g) return toast('请填写节点名称和指引');
+      tempCustomNodes.push({ id:'custom_'+Date.now(), name:n, guide:g });
+      document.getElementById('editCustomName').value = '';
+      document.getElementById('editCustomGuide').value = '';
+      renderCustomList();
+      renderNodePreview();
+    });
+    document.getElementById('editSaveBtn').addEventListener('click', ()=>{
+      const newName = document.getElementById('editTplName').value.trim();
+      if (!newName) return toast('请输入模板名称');
+      const tpls = getTemplates();
+      if (newName !== template.name && tpls.find(x => x.name === newName)) return toast('模板名称已存在');
+      const t = tpls.find(x => x.name === template.name);
+      if (!t) return;
+      t.name = newName;
+      t.type = document.getElementById('editTplType').value;
+      t.logistics = document.getElementById('editTplLogistics').value;
+      t.tax = document.getElementById('editTplTax').value;
+      t.extraNodes = EXTRA_NODES.filter(n => document.getElementById('editExtra_'+n.id).checked).map(n => n.id);
+      t.customNodes = tempCustomNodes.map(c => ({ id:c.id, name:c.name, guide:c.guide }));
       saveTemplates(tpls);
+      overlay.remove();
       renderTemplateManager();
-      toast('模板已删除');
-    }));
+      toast('模板已更新');
+    });
+    document.getElementById('editCancelBtn').addEventListener('click', ()=>overlay.remove());
+    overlay.querySelector('.modal-close')?.addEventListener('click', ()=>overlay.remove());
+
+    renderCustomList();
+    renderNodePreview();
   }
 
   // ========== 查看详情 ==========
@@ -602,9 +839,10 @@
     }
 
     function renderNodeUI() {
+      const logistics = exam.logistics || exam.payment || '';
       app.innerHTML = `
         <h1>答题者：${exam.candidateName}</h1>
-        <p>任务ID：${exam.taskId} | ${exam.type==='cloud'?'云仓':exam.type==='spot'?'现货':'期货'} | 支付：${exam.payment||'无'} | 税费：${exam.tax||'无'}</p>
+        <p>任务ID：${exam.taskId} | ${TYPE_LABELS[exam.type]||exam.type} | 物流：${logistics||'无'} | 税费：${exam.tax||'无'}</p>
         <div class="progress-text" id="progressText"></div>
         <div class="progress-bar"><div class="fill" id="progressFill" style="width:0%;"></div></div>
         <div style="background:#f0f4ff;padding:0.8rem;border-radius:6px;margin-bottom:1rem;">
@@ -728,7 +966,7 @@
 
     app.innerHTML = `
       <h1>审核：${exam.candidateName}</h1>
-      <p>任务ID：${exam.taskId} | 类型：${exam.type}</p>
+      <p>任务ID：${exam.taskId} | 类型：${TYPE_LABELS[exam.type]||exam.type}</p>
       <button id="passAllBtn" class="secondary" style="margin-bottom:1rem;">一键全部通过</button>
       ${nodes.map((n,i) => {
         const urls = ss[n.id] || [];
@@ -789,6 +1027,7 @@
     const passed = nodes.filter(n => exam.reviewResults?.[n.id] === 'pass').length;
     const failed = nodes.filter(n => exam.reviewResults?.[n.id] === 'fail').length;
     const total = nodes.length;
+    const logistics = exam.logistics || exam.payment || '';
 
     function closeReport() { overlay.remove(); renderExaminerDashboard(); }
     const overlay = document.createElement('div');
@@ -799,7 +1038,7 @@
         <button class="modal-close no-print">✕ 关闭</button>
         <h1 style="border-bottom:3px solid #2d6ee0;padding-bottom:0.8rem;">考核成绩单</h1>
         <p><strong>答题者：</strong>${exam.candidateName} | <strong>任务ID：</strong>${exam.taskId}</p>
-        <p><strong>类型：</strong>${exam.type} | 支付：${exam.payment||'无'} | 税费：${exam.tax||'无'}</p>
+        <p><strong>类型：</strong>${TYPE_LABELS[exam.type]||exam.type} | 物流：${logistics||'无'} | 税费：${exam.tax||'无'}</p>
         <p><strong>结果：</strong>通过 ${passed}/${total} | 不通过 ${failed}/${total}</p>
         <table>
           <tr><th>序号</th><th>节点</th><th>截图</th><th>结果</th><th>评语</th></tr>
@@ -823,7 +1062,7 @@
     overlay.querySelector('.modal-close').addEventListener('click', closeReport);
   }
 
-  // ========== 数据导入导出（包含 IndexedDB 截图） ==========
+  // ========== 数据导入导出 ==========
   async function exportData() {
     const exams = getExamsRaw();
     for (const exam of exams) {
