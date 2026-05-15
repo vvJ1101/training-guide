@@ -1,7 +1,6 @@
 (function(){
   'use strict';
 
-  // ========== 常量 ==========
   const EXAM_STATUS = Object.freeze({ PENDING:'pending', SUBMITTED:'submitted', REVIEWED:'reviewed' });
   const MAX_IMAGES_PER_NODE = 5;
   const MAX_IMAGE_WIDTH = 1920;
@@ -14,13 +13,11 @@
   }
   const ADMIN_PASSWORD_HASH = hashStr('admin123');
 
-  // 联欣节点
   const LIANXIN_NODES = [
     { id:'lx_order_filter', name:'联欣订单筛选与标签设置', guide:'上传联欣订单列表界面截图，需显示筛选条件、订单主题类型标签，确保未混淆云仓/期货/现货' },
     { id:'lx_product_audit', name:'联欣商品审核', guide:'上传订单详情/商品审核界面截图，确认商品清单、折扣、收货人信息、订单比例' }
   ];
 
-  // 康雷核心节点（按订单类型）
   const KANGLEI_NODES = {
     cloud: [
       { id:'checkOrder', name:'检查渠道订单', guide:'渠道订单检查界面，需清晰显示订单号、客户名称、商品信息' },
@@ -37,7 +34,6 @@
     ]
   };
 
-  // 通用可选节点（所有订单类型都可选用）
   const EXTRA_NODES = [
     { id:'recharge', name:'余额充值', guide:'余额充值操作界面，需显示品牌余额账号、充值金额、凭证' },
     { id:'express', name:'快递单据', guide:'上传快递单或物流信息截图' },
@@ -46,16 +42,14 @@
 
   const LOGISTICS_OPTIONS = ['寄付', '到付'];
   const TAX_OPTIONS = ['含税', '不含税'];
-
-  // 订单类型中文映射
   const TYPE_LABELS = { cloud:'云仓', spot:'现货', future:'期货' };
 
-  // ========== IndexedDB 截图存储 ==========
+  // ========== IndexedDB ==========
   const DB_NAME = 'ExamDB_v2';
   const DB_STORE = 'screenshots';
   const DB_KEY_SEP = '|';
-
   let _dbPromise = null;
+
   function openDB() {
     if (_dbPromise) return _dbPromise;
     _dbPromise = new Promise((resolve, reject) => {
@@ -84,10 +78,8 @@
       const result = {};
       cursorReq.onsuccess = e => {
         const cursor = e.target.result;
-        if (cursor) {
-          result[cursor.key.slice(prefix.length)] = cursor.value;
-          cursor.continue();
-        } else resolve(result);
+        if (cursor) { result[cursor.key.slice(prefix.length)] = cursor.value; cursor.continue(); }
+        else resolve(result);
       };
       cursorReq.onerror = () => resolve({});
     });
@@ -123,9 +115,7 @@
   const _ssCache = new Map();
 
   async function loadScreenshots(examId) {
-    if (!_ssCache.has(examId)) {
-      _ssCache.set(examId, await imgGetAll(examId));
-    }
+    if (!_ssCache.has(examId)) { _ssCache.set(examId, await imgGetAll(examId)); }
     return _ssCache.get(examId);
   }
 
@@ -142,9 +132,7 @@
     for (const exam of exams) {
       if (exam.screenshots && Object.keys(exam.screenshots).length > 0) {
         for (const [nodeId, urls] of Object.entries(exam.screenshots)) {
-          if (urls && urls.length > 0) {
-            await imgSet(exam.taskId, nodeId, urls);
-          }
+          if (urls && urls.length > 0) await imgSet(exam.taskId, nodeId, urls);
         }
         delete exam.screenshots;
         changed = true;
@@ -153,7 +141,7 @@
     if (changed) setStore('exams', exams);
   }
 
-  // ========== localStorage 存储 ==========
+  // ========== localStorage ==========
   function getStore(key, def) { try { const d = localStorage.getItem(key); return d ? JSON.parse(d) : def; } catch(e) { return def; } }
   function setStore(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
   function getExamsRaw() { return getStore('exams', []); }
@@ -165,9 +153,8 @@
 
   let currentUser = null;
   const app = document.getElementById('app');
-
-  // ========== Toast ==========
   const toastContainer = document.getElementById('toast-container');
+
   function toast(msg, d = 2500) {
     const el = document.createElement('div');
     el.className = 'toast';
@@ -176,7 +163,6 @@
     setTimeout(() => { if (el.parentNode) el.remove(); }, d);
   }
 
-  // ========== Loading 状态 ==========
   function setLoading(btn, loading) {
     if (!btn) return;
     if (loading) {
@@ -189,7 +175,6 @@
     }
   }
 
-  // ========== 图片压缩 ==========
   function compressImage(file) {
     return new Promise((resolve, reject) => {
       if (file.size < 500 * 1024) {
@@ -204,10 +189,7 @@
         URL.revokeObjectURL(img.src);
         let { width, height } = img;
         const canvas = document.createElement('canvas');
-        if (width > MAX_IMAGE_WIDTH) {
-          height = Math.round(height * MAX_IMAGE_WIDTH / width);
-          width = MAX_IMAGE_WIDTH;
-        }
+        if (width > MAX_IMAGE_WIDTH) { height = Math.round(height * MAX_IMAGE_WIDTH / width); width = MAX_IMAGE_WIDTH; }
         canvas.width = width; canvas.height = height;
         canvas.getContext('2d').drawImage(img, 0, 0, width, height);
         resolve(canvas.toDataURL('image/jpeg', IMAGE_QUALITY));
@@ -217,7 +199,6 @@
     });
   }
 
-  // ========== 灯箱 ==========
   function showLightbox(url) {
     const lb = document.createElement('div');
     lb.className = 'lightbox';
@@ -229,7 +210,6 @@
   }
   window.showLightbox = showLightbox;
 
-  // ========== 获取完整节点列表 ==========
   function getFullNodes(exam) {
     const base = KANGLEI_NODES[exam.type] || [];
     const extra = (exam.extraNodes || []).map(id => EXTRA_NODES.find(e => e.id === id)).filter(Boolean);
@@ -237,7 +217,6 @@
     return [...LIANXIN_NODES, ...base, ...extra, ...custom];
   }
 
-  // ========== 模板智能命名 ==========
   function makeTemplateName(type, logistics, tax) {
     const parts = [TYPE_LABELS[type]];
     if (logistics) parts.push(logistics);
@@ -245,7 +224,6 @@
     return parts.join('-');
   }
 
-  // ========== 一键生成题库模板 ==========
   function generateTemplateLibrary() {
     const types = ['cloud', 'spot', 'future'];
     const all = getTemplates();
@@ -265,7 +243,7 @@
     return added;
   }
 
-  // ========== 登录状态持久化 ==========
+  // ========== 登录 ==========
   function saveLogin() {
     if (currentUser) localStorage.setItem('loginData', JSON.stringify(currentUser));
     else localStorage.removeItem('loginData');
@@ -278,15 +256,14 @@
     return false;
   }
 
-  // ========== 登录界面 ==========
   function renderLogin() {
     currentUser = null;
     localStorage.removeItem('loginData');
     app.innerHTML = `
-      <h1>市场部系统操作考核 v2.5</h1>
+      <h1>市场部系统操作考核 v2.6</h1>
       <div style="max-width:400px;margin:2rem auto;">
         <div class="form-group"><label>角色</label><select id="roleSelect"><option value="">-- 请选择 --</option><option value="examiner">考核官</option><option value="candidate">答题者</option></select></div>
-        <div class="form-group"><label>用户名</label><input type="text" id="usernameInput" placeholder="工号或姓名"></div>
+        <div class="form-group"><label>用户名（工号或姓名）</label><input type="text" id="usernameInput" placeholder="工号或姓名"></div>
         <div id="pwdGroup" class="form-group hidden">
           <label>管理员密码</label>
           <div style="display:flex;gap:0.4rem;">
@@ -294,7 +271,6 @@
             <button id="pwdToggleBtn" type="button" style="padding:0.6rem 0.8rem;flex-shrink:0;font-size:0.9rem;" tabindex="-1">👁</button>
           </div>
         </div>
-        <div id="taskGroup" class="form-group hidden"><label>考核任务ID</label><input type="text" id="taskIdInput" placeholder="由考核官提供"></div>
         <button id="loginBtn" class="success" style="width:100%;">登录</button>
         <button id="resetDataBtn" class="secondary danger" style="width:100%;margin-top:0.5rem;">重置所有数据</button>
       </div>
@@ -302,13 +278,8 @@
 
     document.getElementById('roleSelect').addEventListener('change', function(){
       const isExaminer = this.value === 'examiner';
-      const isCandidate = this.value === 'candidate';
       document.getElementById('pwdGroup').classList.toggle('hidden', !isExaminer);
-      document.getElementById('taskGroup').classList.toggle('hidden', !isCandidate);
-      setTimeout(() => {
-        if (isExaminer) document.getElementById('passwordInput').focus();
-        else if (isCandidate) document.getElementById('taskIdInput').focus();
-      }, 100);
+      if (isExaminer) setTimeout(() => document.getElementById('passwordInput').focus(), 100);
     });
 
     document.getElementById('pwdToggleBtn').addEventListener('click', function(){
@@ -318,12 +289,9 @@
       this.textContent = isPwd ? '🙈' : '👁';
     });
 
-    function onEnter(e) {
-      if (e.key === 'Enter') document.getElementById('loginBtn').click();
-    }
+    function onEnter(e) { if (e.key === 'Enter') document.getElementById('loginBtn').click(); }
     document.getElementById('usernameInput').addEventListener('keydown', onEnter);
     document.getElementById('passwordInput').addEventListener('keydown', onEnter);
-    document.getElementById('taskIdInput').addEventListener('keydown', onEnter);
 
     document.getElementById('loginBtn').addEventListener('click', async function(){
       const role = document.getElementById('roleSelect').value;
@@ -337,11 +305,9 @@
         saveLogin();
         renderExaminerDashboard();
       } else {
-        const tid = document.getElementById('taskIdInput').value.trim();
-        if (!tid) { setLoading(this, false); return toast('请输入任务ID'); }
-        currentUser = { role, username, taskId: tid };
+        currentUser = { role, username };
         saveLogin();
-        await renderCandidateUpload();
+        renderCandidateDashboard();
       }
       if (document.body.contains(this)) setLoading(this, false);
     });
@@ -357,6 +323,289 @@
     });
 
     document.getElementById('usernameInput').focus();
+  }
+
+  // ========== 答题者看板 ==========
+  function renderCandidateDashboard() {
+    const exams = getExamsRaw().filter(e => e.candidateName === currentUser.username);
+
+    function renderList() {
+      const container = document.getElementById('candidateExamList');
+      if (!container) return;
+      if (exams.length === 0) {
+        container.innerHTML = '<p style="color:#94a3b8;text-align:center;padding:2rem;">暂无分配给您的考核任务</p>';
+        return;
+      }
+      container.innerHTML = exams.map(e => {
+        const typeLabel = TYPE_LABELS[e.type] || e.type;
+        const logistics = e.logistics || e.payment || '';
+        const statusIcon = e.status===EXAM_STATUS.PENDING ? '⏳' : e.status===EXAM_STATUS.SUBMITTED ? '📤' : '✅';
+        const statusLabel = e.status===EXAM_STATUS.PENDING ? '待提交' : e.status===EXAM_STATUS.SUBMITTED ? '已提交待审' : '已审核';
+        const totalNodes = getFullNodes(e).length;
+        const failedNodes = e.reviewResults ? Object.entries(e.reviewResults).filter(([,v])=>v==='fail').length : 0;
+        const passedNodes = e.reviewResults ? Object.entries(e.reviewResults).filter(([,v])=>v==='pass').length : 0;
+        const reviewInfo = e.status===EXAM_STATUS.REVIEWED ? `（通过${passedNodes}，不通过${failedNodes}）` : '';
+        const canResubmit = e.status===EXAM_STATUS.REVIEWED && failedNodes > 0;
+
+        let actionBtn = '';
+        if (e.status === EXAM_STATUS.PENDING) {
+          actionBtn = `<button class="startExamBtn success" data-id="${e.taskId}">开始考核</button>`;
+        } else if (e.status === EXAM_STATUS.SUBMITTED) {
+          actionBtn = `<span style="color:#64748b;">等待审核中...</span>`;
+        } else if (canResubmit) {
+          actionBtn = `<button class="resubmitBtn" data-id="${e.taskId}" style="background:#e65100;color:#fff;">重新提交（${failedNodes}个节点不通过）</button>
+                       <button class="viewReportBtn secondary" data-id="${e.taskId}">查看结果</button>`;
+        } else if (e.status === EXAM_STATUS.REVIEWED) {
+          actionBtn = `<button class="viewReportBtn secondary" data-id="${e.taskId}">查看成绩单</button>`;
+        }
+
+        return `<div class="card" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;">
+          <div>
+            <strong>${e.taskId}</strong> | ${typeLabel} | 物流：${logistics||'无'} | 税费：${e.tax||'无'}
+            <br><span style="color:#64748b;">${statusIcon} ${statusLabel}${reviewInfo} | 共${totalNodes}个节点 | ${new Date(e.createTime).toLocaleDateString()}</span>
+          </div>
+          <div>${actionBtn}</div>
+        </div>`;
+      }).join('');
+
+      container.querySelectorAll('.startExamBtn').forEach(b => b.addEventListener('click', function(){
+        currentUser.taskId = this.dataset.id;
+        saveLogin();
+        renderCandidateUpload();
+      }));
+      container.querySelectorAll('.viewReportBtn').forEach(b => b.addEventListener('click', function(){
+        currentUser.taskId = this.dataset.id;
+        saveLogin();
+        showCandidateReport(this.dataset.id);
+      }));
+      container.querySelectorAll('.resubmitBtn').forEach(b => b.addEventListener('click', function(){
+        currentUser.taskId = this.dataset.id;
+        saveLogin();
+        renderCandidateUpload(true);
+      }));
+    }
+
+    app.innerHTML = `
+      <h1>我的考核任务</h1>
+      <p>答题者：${currentUser.username}</p>
+      <div id="candidateExamList"></div>
+      <button id="cLogoutBtn" class="secondary">退出</button>
+    `;
+    renderList();
+    document.getElementById('cLogoutBtn').addEventListener('click', ()=>{ currentUser=null; renderLogin(); });
+  }
+
+  // ========== 答题者查看成绩单 ==========
+  async function showCandidateReport(taskId) {
+    const exams = getExamsRaw();
+    const exam = exams.find(e => e.taskId === taskId);
+    if (!exam) return;
+    const ss = await loadScreenshots(taskId);
+    const nodes = getFullNodes(exam);
+    const passed = nodes.filter(n => exam.reviewResults?.[n.id] === 'pass').length;
+    const failed = nodes.filter(n => exam.reviewResults?.[n.id] === 'fail').length;
+
+    function closeReport() { overlay.remove(); renderCandidateDashboard(); }
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.addEventListener('click', e => { if (e.target === overlay) closeReport(); });
+    overlay.innerHTML = `
+      <div class="modal-content">
+        <button class="modal-close no-print" id="crClose">✕ 关闭</button>
+        <h1>考核成绩单</h1>
+        <p><strong>答题者：</strong>${exam.candidateName} | <strong>任务ID：</strong>${exam.taskId}</p>
+        <p><strong>结果：</strong>通过 ${passed}/${nodes.length} | 不通过 ${failed}/${nodes.length}</p>
+        <table>
+          <tr><th>序号</th><th>节点</th><th>截图</th><th>结果</th><th>评语</th></tr>
+          ${nodes.map((n,i) => {
+            const r = exam.reviewResults?.[n.id];
+            const urls = ss[n.id] || [];
+            return `<tr>
+              <td>${i+1}</td><td>${n.name}</td>
+              <td>${urls.length ? urls.map(u => `<img src="${u}" style="max-width:80px;cursor:pointer;" onclick="showLightbox('${u.replace(/'/g,"\\'")}')">`).join(' ') : '无'}</td>
+              <td style="color:${r==='pass'?'#16a34a':r==='fail'?'#c44536':'#94a3b8'};font-weight:600;">${r==='pass'?'通过':r==='fail'?'不通过':'未审核'}</td>
+              <td>${exam.nodeComments?.[n.id]||''}</td>
+            </tr>`;
+          }).join('')}
+        </table>
+        <div style="background:#f8f8f8;padding:0.8rem;border-radius:6px;margin:0.5rem 0;"><strong>总评语：</strong>${exam.comment||'无'}</div>
+        <button class="no-print" onclick="window.print()">🖨️ 打印 / 导出PDF</button>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    overlay.querySelector('#crClose').addEventListener('click', closeReport);
+  }
+
+  // ========== 答题者上传 ==========
+  async function renderCandidateUpload(isResubmit = false) {
+    const exams = getExamsRaw();
+    const exam = exams.find(e => e.taskId === currentUser.taskId && e.candidateName === currentUser.username);
+    if (!exam) { toast('未找到任务'); currentUser=null; renderLogin(); return; }
+    if (!isResubmit && exam.status === EXAM_STATUS.REVIEWED) {
+      const failedNodes = Object.entries(exam.reviewResults||{}).filter(([,v])=>v==='fail').length;
+      if (failedNodes > 0) {
+        if (confirm('该考核已审核，有'+failedNodes+'个节点不通过。要重新提交吗？')) { isResubmit = true; }
+        else { currentUser=null; renderLogin(); return; }
+      } else {
+        toast('该任务已审核完成'); currentUser=null; renderLogin(); return;
+      }
+    }
+
+    const ss = await loadScreenshots(exam.taskId);
+    const nodes = getFullNodes(exam);
+    // 重提交时，清除之前不通过节点的截图
+    if (isResubmit && exam.reviewResults) {
+      for (const n of nodes) {
+        if (exam.reviewResults[n.id] === 'fail') {
+          ss[n.id] = [];
+          await saveNodeImgs(exam.taskId, n.id, []);
+        }
+      }
+      // 清除旧的审核结果
+      exam.reviewResults = {};
+      exam.nodeComments = {};
+      exam.comment = '';
+      exam.resubmitCount = (exam.resubmitCount || 0) + 1;
+      exam.status = EXAM_STATUS.SUBMITTED;
+      saveExams(exams);
+    }
+
+    function renderProgress() {
+      const done = nodes.filter(n => (ss[n.id] || []).length > 0).length;
+      const pct = nodes.length ? Math.round(done / nodes.length * 100) : 0;
+      const el = document.getElementById('progressFill');
+      const txt = document.getElementById('progressText');
+      if (el) el.style.width = pct + '%';
+      if (txt) txt.textContent = `已完成 ${done}/${nodes.length} 个节点（${pct}%）`;
+    }
+
+    function renderNodeUI() {
+      const logistics = exam.logistics || exam.payment || '';
+      app.innerHTML = `
+        <h1>答题者：${exam.candidateName}</h1>
+        <p>任务ID：${exam.taskId} | ${TYPE_LABELS[exam.type]||exam.type} | 物流：${logistics||'无'} | 税费：${exam.tax||'无'} ${isResubmit ? '<span style="color:#e65100;">| 🔄 重新提交</span>' : ''}</p>
+        ${exam.resubmitCount ? `<p style="color:#64748b;">已重新提交 ${exam.resubmitCount} 次</p>` : ''}
+        <div class="progress-text" id="progressText"></div>
+        <div class="progress-bar"><div class="fill" id="progressFill" style="width:0%;"></div></div>
+        <div style="background:#f0f4ff;padding:0.8rem;border-radius:6px;margin-bottom:1rem;">
+          <strong>本次考核节点（共${nodes.length}个）：</strong> ${nodes.map((n,i)=>`${i+1}.${n.name}`).join(' → ')}
+        </div>
+        ${nodes.map((n,i) => {
+          const urls = ss[n.id] || [];
+          const isFailed = isResubmit && exam.reviewResults && exam.reviewResults[n.id] === 'fail';
+          return `<div class="card" id="card-${n.id}">
+            <strong>${i+1}. ${n.name}</strong>
+            <p style="color:#64748b;">${n.guide}</p>
+            <div class="img-list" id="imgs-${n.id}">
+              ${urls.map((url,j) => `<div class="img-item"><img src="${url}" onclick="showLightbox('${url.replace(/'/g,"\\'")}')"><button class="remove-img" data-node="${n.id}" data-idx="${j}">×</button></div>`).join('')}
+            </div>
+            ${urls.length < MAX_IMAGES_PER_NODE ? `
+              <button class="uploadBtn" data-node="${n.id}">📷 上传截图</button>
+              <button class="cameraBtn" data-node="${n.id}" style="background:#16a34a;">📸 拍照</button>
+            ` : ''}
+            <input type="file" accept="image/*" id="file-${n.id}" style="display:none;" multiple>
+            <input type="file" accept="image/*" capture="environment" id="camera-${n.id}" style="display:none;">
+          </div>`;
+        }).join('')}
+        <div class="no-print">
+          <button id="submitExamBtn" class="success">提交考核</button>
+          <button id="saveDraftBtn" class="secondary">暂存草稿</button>
+          <button id="backToDashBtn" class="secondary">返回</button>
+        </div>
+      `;
+      renderProgress();
+      bindEvents();
+    }
+
+    function bindEvents() {
+      document.querySelectorAll('.uploadBtn').forEach(b => {
+        b.addEventListener('click', function(){ document.getElementById('file-'+this.dataset.node).click(); });
+      });
+      document.querySelectorAll('.cameraBtn').forEach(b => {
+        b.addEventListener('click', function(){ document.getElementById('camera-'+this.dataset.node).click(); });
+      });
+      // 文件上传
+      document.querySelectorAll('input[type=file]').forEach(input => {
+        input.addEventListener('change', async function(e) {
+          const nodeId = this.id.replace(/^(file|camera)-/, '');
+          const files = Array.from(e.target.files);
+          const current = ss[nodeId] || [];
+          if (current.length + files.length > MAX_IMAGES_PER_NODE) return toast(`最多上传${MAX_IMAGES_PER_NODE}张图片`);
+          const btn = document.querySelector(`.uploadBtn[data-node="${nodeId}"]`) || document.querySelector(`.cameraBtn[data-node="${nodeId}"]`);
+          setLoading(btn, true);
+          for (const file of files) {
+            const dataURL = await compressImage(file);
+            current.push(dataURL);
+          }
+          ss[nodeId] = current;
+          await saveNodeImgs(exam.taskId, nodeId, current);
+          updateImgList(nodeId, current);
+          renderProgress();
+          setLoading(btn, false);
+          this.value = '';
+        });
+      });
+      // 删除
+      document.querySelectorAll('.remove-img').forEach(btn => {
+        btn.addEventListener('click', async function(e) {
+          e.stopPropagation();
+          const nodeId = this.dataset.node;
+          const idx = parseInt(this.dataset.idx);
+          const arr = ss[nodeId] || [];
+          arr.splice(idx, 1);
+          ss[nodeId] = arr;
+          await saveNodeImgs(exam.taskId, nodeId, arr);
+          updateImgList(nodeId, arr);
+          renderProgress();
+        });
+      });
+      // 提交
+      document.getElementById('submitExamBtn').addEventListener('click', async function(){
+        const missing = nodes.filter(n => (ss[n.id] || []).length === 0);
+        if (missing.length && !confirm(`有 ${missing.length} 个节点未上传截图，确定提交？`)) return;
+        setLoading(this, true);
+        for (const n of nodes) {
+          await saveNodeImgs(exam.taskId, n.id, ss[n.id] || []);
+        }
+        exam.status = EXAM_STATUS.SUBMITTED;
+        saveExams(exams);
+        toast('提交成功');
+        renderCandidateDashboard();
+      });
+      // 暂存
+      document.getElementById('saveDraftBtn').addEventListener('click', async function(){
+        setLoading(this, true);
+        for (const n of nodes) {
+          await saveNodeImgs(exam.taskId, n.id, ss[n.id] || []);
+        }
+        saveExams(exams);
+        setLoading(this, false);
+        toast('草稿已保存');
+      });
+      document.getElementById('backToDashBtn').addEventListener('click', ()=>renderCandidateDashboard());
+    }
+
+    function updateImgList(nodeId, arr) {
+      const container = document.getElementById('imgs-'+nodeId);
+      if (!container) return;
+      container.innerHTML = (arr||[]).map((url,j) =>
+        `<div class="img-item"><img src="${url}" onclick="showLightbox('${url.replace(/'/g,"\\'")}')"><button class="remove-img" data-node="${nodeId}" data-idx="${j}">×</button></div>`
+      ).join('');
+      container.querySelectorAll('.remove-img').forEach(b => b.addEventListener('click', async function(e){
+        e.stopPropagation();
+        const nid = this.dataset.node, ix = parseInt(this.dataset.idx);
+        const a = ss[nid] || []; a.splice(ix,1); ss[nid] = a;
+        await saveNodeImgs(exam.taskId, nid, a);
+        updateImgList(nid, a);
+        renderProgress();
+      }));
+      const ub = document.querySelector(`.uploadBtn[data-node="${nodeId}"]`);
+      const cb = document.querySelector(`.cameraBtn[data-node="${nodeId}"]`);
+      if (ub) ub.style.display = (arr||[]).length < MAX_IMAGES_PER_NODE ? 'inline-block' : 'none';
+      if (cb) cb.style.display = (arr||[]).length < MAX_IMAGES_PER_NODE ? 'inline-block' : 'none';
+    }
+
+    renderNodeUI();
   }
 
   // ========== 考核官面板 ==========
@@ -386,14 +635,9 @@
     `;
     renderExamTable(exams, filter);
 
-    function onSearch() {
-      renderExaminerDashboard(document.getElementById('searchInput').value);
-    }
+    function onSearch() { renderExaminerDashboard(document.getElementById('searchInput').value); }
     let searchTimer;
-    document.getElementById('searchInput').addEventListener('input', () => {
-      clearTimeout(searchTimer);
-      searchTimer = setTimeout(onSearch, 300);
-    });
+    document.getElementById('searchInput').addEventListener('input', () => { clearTimeout(searchTimer); searchTimer = setTimeout(onSearch, 300); });
     document.getElementById('searchBtn').addEventListener('click', onSearch);
     document.getElementById('statusFilter').addEventListener('change', onSearch);
     document.getElementById('createExamBtn').addEventListener('click', ()=>renderCreateExam());
@@ -417,9 +661,10 @@
       ? '<tr><td colspan="7" style="text-align:center;color:#94a3b8;padding:2rem;">暂无记录</td></tr>'
       : filtered.map(e => {
           const statusLabel = e.status === EXAM_STATUS.SUBMITTED ? '已提交' : e.status === EXAM_STATUS.REVIEWED ? '已审核' : '待提交';
-          const logistics = e.logistics || e.payment || ''; // 兼容旧数据 payment → logistics
+          const logistics = e.logistics || e.payment || '';
+          const resubmitTag = e.resubmitCount ? ` 🔄` : '';
           return `<tr>
-            <td>${e.taskId}</td>
+            <td>${e.taskId}${resubmitTag}</td>
             <td>${TYPE_LABELS[e.type]||e.type}</td>
             <td>${e.candidateName}</td>
             <td>${logistics||'-'} / ${e.tax||'-'}</td>
@@ -434,12 +679,10 @@
         }).join('');
   }
 
-  // ========== 创建考核 ==========
+  // ========== 创建考核（支持批量） ==========
   function renderCreateExam(template = null) {
     const templates = getTemplates();
     let tempCustomNodes = template?.customNodes ? template.customNodes.map(c => ({ ...c })) : [];
-
-    // 智能建议的考核名称
     const suggestedName = template ? template.name + '-' : '';
 
     function renderCustomList() {
@@ -468,7 +711,6 @@
       el.innerHTML = `<strong>本次考核节点预览（共${all.length}个）：</strong><br>` + all.map((n,i)=>`${i+1}. ${n.name}`).join('<br>');
     }
 
-    // 按类型分组模板
     const groupedTpls = { cloud:[], spot:[], future:[] };
     templates.forEach(t => { if (groupedTpls[t.type]) groupedTpls[t.type].push(t); });
 
@@ -490,7 +732,10 @@
         <div class="form-group"><label>物流方式</label><select id="logisticsSelect">${LOGISTICS_OPTIONS.map(v=>`<option value="${v}">${v}</option>`).join('')}</select></div>
         <div class="form-group"><label>税费情况</label><select id="taxSelect">${TAX_OPTIONS.map(v=>`<option value="${v}">${v}</option>`).join('')}</select></div>
       </div>
-      <div class="form-group"><label>答题者姓名</label><input type="text" id="candidateNameInput" placeholder="${suggestedName ? '建议：'+suggestedName+'...' : ''}"></div>
+      <div class="form-group">
+        <label>答题者姓名（<strong>支持批量</strong>：一行一个，或用逗号/空格分隔）</label>
+        <textarea id="candidateNameInput" rows="3" placeholder="${suggestedName ? '建议：'+suggestedName+'张三\n'+suggestedName+'李四' : '张三\n李四\n王五'}"></textarea>
+      </div>
       <div class="form-group"><label>可选附加节点（所有类型通用）</label><div>${extraChecks}</div></div>
       <div class="form-group">
         <label>📝 自定义考核节点</label>
@@ -502,7 +747,7 @@
         <div id="customNodesList"></div>
       </div>
       <div class="form-group" id="nodePreview" style="background:#f0f4ff;padding:1rem;border-radius:8px;"></div>
-      <button id="createBtn" class="success">生成任务</button>
+      <button id="createBtn" class="success">批量生成任务</button>
       <button id="saveTemplateBtn" class="secondary">💾 保存为模板</button>
       <button id="backBtn" class="secondary">返回</button>
     `;
@@ -528,22 +773,34 @@
     });
 
     document.getElementById('createBtn').addEventListener('click', function(){
-      const candidate = document.getElementById('candidateNameInput').value.trim();
-      if (!candidate) return toast('请输入答题者姓名');
+      const raw = document.getElementById('candidateNameInput').value.trim();
+      if (!raw) return toast('请输入答题者姓名');
+      // 支持换行、逗号、中文逗号、空格分隔
+      const names = raw.split(/[\n,，\s]+/).map(s => s.trim()).filter(Boolean);
+      if (names.length === 0) return toast('未识别到有效姓名');
       const type = document.getElementById('examType').value;
       const logistics = document.getElementById('logisticsSelect').value;
       const tax = document.getElementById('taxSelect').value;
       const extra = EXTRA_NODES.filter(n => document.getElementById('extra_'+n.id).checked).map(n => n.id);
-      const newExam = {
-        taskId: generateId(), type, logistics, tax, extraNodes: extra,
-        candidateName: candidate, status: EXAM_STATUS.PENDING, createTime: Date.now(),
-        screenshots: null, reviewResults: {}, nodeComments: {}, comment: '',
-        customNodes: tempCustomNodes.map(c => ({ id:c.id, name:c.name, guide:c.guide }))
-      };
       const exams = getExamsRaw();
-      exams.push(newExam);
+      const created = [];
+      for (const name of names) {
+        const newExam = {
+          taskId: generateId(), type, logistics, tax, extraNodes: extra,
+          candidateName: name, status: EXAM_STATUS.PENDING, createTime: Date.now(),
+          screenshots: null, reviewResults: {}, nodeComments: {}, comment: '',
+          customNodes: tempCustomNodes.map(c => ({ id:c.id, name:c.name, guide:c.guide })),
+          resubmitCount: 0
+        };
+        exams.push(newExam);
+        created.push(newExam.taskId);
+      }
       saveExams(exams);
-      toast(`任务已创建，ID：${newExam.taskId}`);
+      if (names.length === 1) {
+        toast(`任务已创建，ID：${created[0]}`);
+      } else {
+        toast(`已批量创建 ${names.length} 个任务`);
+      }
       renderExaminerDashboard();
     });
 
@@ -568,6 +825,7 @@
       document.getElementById('examType').value = template.type;
       document.getElementById('logisticsSelect').value = template.logistics || LOGISTICS_OPTIONS[0];
       document.getElementById('taxSelect').value = template.tax || TAX_OPTIONS[0];
+      document.getElementById('candidateNameInput').placeholder = '建议：' + template.name + '-张三';
       if (template.extraNodes) template.extraNodes.forEach(id => { const cb = document.getElementById('extra_'+id); if (cb) cb.checked = true; });
       renderCustomList();
       updateNodePreview();
@@ -577,23 +835,17 @@
   // ========== 模板管理 ==========
   function renderTemplateManager() {
     let templates = getTemplates();
-    // 首次打开自动生成12个模板
-    if (templates.length === 0) {
-      generateTemplateLibrary();
-      templates = getTemplates();
-    }
+    if (templates.length === 0) { generateTemplateLibrary(); templates = getTemplates(); }
 
     function renderList() {
       const tpls = getTemplates();
       const g = { cloud:[], spot:[], future:[] };
       tpls.forEach(t => { if (g[t.type]) g[t.type].push(t); });
-
       const sections = [
         { type:'cloud', label:'☁️ 云仓', color:'#e3f2fd' },
         { type:'spot', label:'📦 现货', color:'#fff3e0' },
         { type:'future', label:'📅 期货', color:'#fce4ec' }
       ];
-
       let html = '';
       for (const s of sections) {
         const items = g[s.type];
@@ -628,7 +880,6 @@
     }
 
     function bindTplEvents() {
-      // 改名
       document.querySelectorAll('.renameTplBtn').forEach(b => b.addEventListener('click', function(e){
         e.stopPropagation();
         const oldName = this.dataset.name;
@@ -636,12 +887,10 @@
         const nameEl = card.querySelector('.tpl-name-text');
         const current = nameEl.textContent;
         const input = document.createElement('input');
-        input.type = 'text';
-        input.value = current;
+        input.type = 'text'; input.value = current;
         input.style.cssText = 'font-weight:700;font-size:1rem;padding:0.2rem 0.4rem;border:2px solid #2d6ee0;border-radius:4px;width:80%;';
         nameEl.replaceWith(input);
-        input.focus();
-        input.select();
+        input.focus(); input.select();
         const save = () => {
           const newName = input.value.trim();
           if (!newName || newName === current) { renderList(); return; }
@@ -656,23 +905,16 @@
         input.addEventListener('blur', save);
         input.addEventListener('keydown', e => { if (e.key==='Enter') save(); if (e.key==='Escape') renderList(); });
       }));
-
-      // 编辑模板
       document.querySelectorAll('.editTplBtn').forEach(b => b.addEventListener('click', function(){
         const tpls = getTemplates();
         const t = tpls.find(x => x.name === this.dataset.name);
-        if (!t) return;
-        editTemplateModal(t);
+        if (t) editTemplateModal(t);
       }));
-
-      // 使用模板创建考核
       document.querySelectorAll('.useTplBtn').forEach(b => b.addEventListener('click', function(){
         const tpls = getTemplates();
         const t = tpls.find(x => x.name === this.dataset.name);
         if (t) renderCreateExam(t);
       }));
-
-      // 删除
       document.querySelectorAll('.delTplBtn').forEach(b => b.addEventListener('click', function(){
         if (!confirm('确定删除模板"' + this.dataset.name + '"？')) return;
         let tpls = getTemplates();
@@ -700,12 +942,10 @@
     });
   }
 
-  // ========== 模板编辑弹窗 ==========
   function editTemplateModal(template) {
     const overlay = document.createElement('div');
     overlay.className = 'modal-overlay';
     overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
-
     const tempCustomNodes = (template.customNodes || []).map(c => ({ ...c }));
     const tempExtra = [...(template.extraNodes || [])];
 
@@ -795,7 +1035,6 @@
     });
     document.getElementById('editCancelBtn').addEventListener('click', ()=>overlay.remove());
     overlay.querySelector('.modal-close')?.addEventListener('click', ()=>overlay.remove());
-
     renderCustomList();
     renderNodePreview();
   }
@@ -822,141 +1061,6 @@
     document.getElementById('backBtn').addEventListener('click', ()=>renderExaminerDashboard());
   }
 
-  // ========== 答题者上传（带进度条 + 压缩） ==========
-  async function renderCandidateUpload() {
-    const exams = getExamsRaw();
-    const exam = exams.find(e => e.taskId === currentUser.taskId && e.candidateName === currentUser.username);
-    if (!exam) { toast('未找到任务'); currentUser=null; renderLogin(); return; }
-    if (exam.status === EXAM_STATUS.REVIEWED) { toast('该任务已审核完成'); currentUser=null; renderLogin(); return; }
-
-    const ss = await loadScreenshots(exam.taskId);
-    const nodes = getFullNodes(exam);
-
-    function renderProgress() {
-      const done = nodes.filter(n => (ss[n.id] || []).length > 0).length;
-      const pct = nodes.length ? Math.round(done / nodes.length * 100) : 0;
-      const el = document.getElementById('progressFill');
-      const txt = document.getElementById('progressText');
-      if (el) el.style.width = pct + '%';
-      if (txt) txt.textContent = `已完成 ${done}/${nodes.length} 个节点（${pct}%）`;
-    }
-
-    function renderNodeUI() {
-      const logistics = exam.logistics || exam.payment || '';
-      app.innerHTML = `
-        <h1>答题者：${exam.candidateName}</h1>
-        <p>任务ID：${exam.taskId} | ${TYPE_LABELS[exam.type]||exam.type} | 物流：${logistics||'无'} | 税费：${exam.tax||'无'}</p>
-        <div class="progress-text" id="progressText"></div>
-        <div class="progress-bar"><div class="fill" id="progressFill" style="width:0%;"></div></div>
-        <div style="background:#f0f4ff;padding:0.8rem;border-radius:6px;margin-bottom:1rem;">
-          <strong>本次考核节点（共${nodes.length}个）：</strong> ${nodes.map((n,i)=>`${i+1}.${n.name}`).join(' → ')}
-        </div>
-        ${nodes.map((n,i) => {
-          const urls = ss[n.id] || [];
-          return `<div class="card" id="card-${n.id}">
-            <strong>${i+1}. ${n.name}</strong>
-            <p style="color:#64748b;">${n.guide}</p>
-            <div class="img-list" id="imgs-${n.id}">
-              ${urls.map((url,j) => `<div class="img-item"><img src="${url}" onclick="showLightbox('${url.replace(/'/g,"\\'")}')"><button class="remove-img" data-node="${n.id}" data-idx="${j}">×</button></div>`).join('')}
-            </div>
-            ${urls.length < MAX_IMAGES_PER_NODE ? `<button class="uploadBtn" data-node="${n.id}">📷 上传截图</button>` : ''}
-            <input type="file" accept="image/*" id="file-${n.id}" style="display:none;" multiple>
-          </div>`;
-        }).join('')}
-        <div class="no-print">
-          <button id="submitExamBtn" class="success">提交考核</button>
-          <button id="saveDraftBtn" class="secondary">暂存草稿</button>
-          <button id="logoutBtn" class="secondary">退出</button>
-        </div>
-      `;
-      renderProgress();
-      bindEvents();
-    }
-
-    function bindEvents() {
-      document.querySelectorAll('.uploadBtn').forEach(b => {
-        b.addEventListener('click', function(){ document.getElementById('file-'+this.dataset.node).click(); });
-      });
-      document.querySelectorAll('input[type=file]').forEach(input => {
-        input.addEventListener('change', async function(e) {
-          const nodeId = this.id.replace('file-', '');
-          const files = Array.from(e.target.files);
-          const current = ss[nodeId] || [];
-          if (current.length + files.length > MAX_IMAGES_PER_NODE) return toast(`最多上传${MAX_IMAGES_PER_NODE}张图片`);
-          const btn = document.querySelector(`.uploadBtn[data-node="${nodeId}"]`);
-          setLoading(btn, true);
-          for (const file of files) {
-            const dataURL = await compressImage(file);
-            current.push(dataURL);
-          }
-          ss[nodeId] = current;
-          await saveNodeImgs(exam.taskId, nodeId, current);
-          updateImgList(nodeId, current);
-          renderProgress();
-          setLoading(btn, false);
-          this.value = '';
-        });
-      });
-      document.querySelectorAll('.remove-img').forEach(btn => {
-        btn.addEventListener('click', async function(e) {
-          e.stopPropagation();
-          const nodeId = this.dataset.node;
-          const idx = parseInt(this.dataset.idx);
-          const arr = ss[nodeId] || [];
-          arr.splice(idx, 1);
-          ss[nodeId] = arr;
-          await saveNodeImgs(exam.taskId, nodeId, arr);
-          updateImgList(nodeId, arr);
-          renderProgress();
-        });
-      });
-      document.getElementById('submitExamBtn').addEventListener('click', async function(){
-        const missing = nodes.filter(n => (ss[n.id] || []).length === 0);
-        if (missing.length && !confirm(`有 ${missing.length} 个节点未上传截图，确定提交？`)) return;
-        setLoading(this, true);
-        for (const n of nodes) {
-          await saveNodeImgs(exam.taskId, n.id, ss[n.id] || []);
-        }
-        exam.status = EXAM_STATUS.SUBMITTED;
-        saveExams(exams);
-        toast('提交成功');
-        currentUser = null; renderLogin();
-      });
-      document.getElementById('saveDraftBtn').addEventListener('click', async function(){
-        setLoading(this, true);
-        for (const n of nodes) {
-          await saveNodeImgs(exam.taskId, n.id, ss[n.id] || []);
-        }
-        saveExams(exams);
-        setLoading(this, false);
-        toast('草稿已保存');
-      });
-      document.getElementById('logoutBtn').addEventListener('click', ()=>{
-        if (confirm('退出将丢失未保存数据？')){ currentUser=null; renderLogin(); }
-      });
-    }
-
-    function updateImgList(nodeId, arr) {
-      const container = document.getElementById('imgs-'+nodeId);
-      if (!container) return;
-      container.innerHTML = (arr||[]).map((url,j) =>
-        `<div class="img-item"><img src="${url}" onclick="showLightbox('${url.replace(/'/g,"\\'")}')"><button class="remove-img" data-node="${nodeId}" data-idx="${j}">×</button></div>`
-      ).join('');
-      container.querySelectorAll('.remove-img').forEach(b => b.addEventListener('click', async function(e){
-        e.stopPropagation();
-        const nid = this.dataset.node, ix = parseInt(this.dataset.idx);
-        const a = ss[nid] || []; a.splice(ix,1); ss[nid] = a;
-        await saveNodeImgs(exam.taskId, nid, a);
-        updateImgList(nid, a);
-        renderProgress();
-      }));
-      const ub = document.querySelector(`.uploadBtn[data-node="${nodeId}"]`);
-      if (ub) ub.style.display = (arr||[]).length < MAX_IMAGES_PER_NODE ? 'inline-block' : 'none';
-    }
-
-    renderNodeUI();
-  }
-
   // ========== 审核界面 ==========
   async function renderReview(taskId) {
     const exams = getExamsRaw();
@@ -968,7 +1072,7 @@
     if (!exam.nodeComments) exam.nodeComments = {};
 
     app.innerHTML = `
-      <h1>审核：${exam.candidateName}</h1>
+      <h1>审核：${exam.candidateName} ${exam.resubmitCount ? '<span style="color:#e65100;">（重新提交第'+exam.resubmitCount+'次）</span>' : ''}</h1>
       <p>任务ID：${exam.taskId} | 类型：${TYPE_LABELS[exam.type]||exam.type}</p>
       <button id="passAllBtn" class="secondary" style="margin-bottom:1rem;">一键全部通过</button>
       ${nodes.map((n,i) => {
@@ -1020,7 +1124,7 @@
     document.getElementById('backReview').addEventListener('click', ()=>renderExaminerDashboard());
   }
 
-  // ========== 成绩单（模态框） ==========
+  // ========== 成绩单 ==========
   async function showReport(taskId) {
     const exams = getExamsRaw();
     const exam = exams.find(e => e.taskId === taskId);
@@ -1029,7 +1133,6 @@
     const nodes = getFullNodes(exam);
     const passed = nodes.filter(n => exam.reviewResults?.[n.id] === 'pass').length;
     const failed = nodes.filter(n => exam.reviewResults?.[n.id] === 'fail').length;
-    const total = nodes.length;
     const logistics = exam.logistics || exam.payment || '';
 
     function closeReport() { overlay.remove(); renderExaminerDashboard(); }
@@ -1041,8 +1144,8 @@
         <button class="modal-close no-print">✕ 关闭</button>
         <h1 style="border-bottom:3px solid #2d6ee0;padding-bottom:0.8rem;">考核成绩单</h1>
         <p><strong>答题者：</strong>${exam.candidateName} | <strong>任务ID：</strong>${exam.taskId}</p>
-        <p><strong>类型：</strong>${TYPE_LABELS[exam.type]||exam.type} | 物流：${logistics||'无'} | 税费：${exam.tax||'无'}</p>
-        <p><strong>结果：</strong>通过 ${passed}/${total} | 不通过 ${failed}/${total}</p>
+        <p><strong>类型：</strong>${TYPE_LABELS[exam.type]||exam.type} | 物流：${logistics||'无'} | 税费：${exam.tax||'无'} ${exam.resubmitCount ? '| 重提交：'+exam.resubmitCount+'次' : ''}</p>
+        <p><strong>结果：</strong>通过 ${passed}/${nodes.length} | 不通过 ${failed}/${nodes.length}</p>
         <table>
           <tr><th>序号</th><th>节点</th><th>截图</th><th>结果</th><th>评语</th></tr>
           ${nodes.map((n,i) => {
@@ -1058,7 +1161,7 @@
         </table>
         <div style="background:#f8f8f8;padding:0.8rem;border-radius:6px;margin:0.5rem 0;"><strong>总评语：</strong>${exam.comment||'无'}</div>
         <p style="color:#64748b;">考核官：${currentUser?.username} | 日期：${new Date().toLocaleDateString()}</p>
-        <button class="no-print" onclick="window.print()" style="margin-top:0.5rem;">🖨️ 打印 / 导出PDF</button>
+        <button class="no-print" onclick="window.print()">🖨️ 打印 / 导出PDF</button>
       </div>
     `;
     document.body.appendChild(overlay);
@@ -1123,7 +1226,7 @@
     await migrateOldData();
     if (restoreLogin()) {
       if (currentUser.role === 'examiner') return renderExaminerDashboard();
-      if (currentUser.role === 'candidate') return renderCandidateUpload();
+      if (currentUser.role === 'candidate') return renderCandidateDashboard();
     }
     renderLogin();
   }
