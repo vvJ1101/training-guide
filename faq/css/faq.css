@@ -1,12 +1,12 @@
 /* === 共用样式 === */
 :root {
-  --c-bg: #f5f7fa; --c-surface: #fff; --c-text: #1e293b; --c-muted: #64748b;
-  --c-primary: #1e3a6f; --c-accent: #2d6ee0; --c-accent-light: #e3f2fd;
-  --c-border: #e2e8f0; --c-ok: #16a34a; --c-warn: #e65100; --c-danger: #c44536;
-  --radius: 8px; --shadow: 0 2px 12px rgba(0,0,0,0.06);
+  --c-bg: #f8fafc; --c-surface: #fff; --c-text: #1e293b; --c-muted: #64748b;
+  --c-primary: #0f172a; --c-accent: #2563eb; --c-accent-light: #eff6ff;
+  --c-border: #e2e8f0; --c-ok: #16a34a; --c-warn: #ea580c; --c-danger: #dc2626;
+  --radius: 10px; --shadow: 0 1px 3px rgba(0,0,0,.04); --shadow-lg: 0 4px 16px rgba(0,0,0,.06);
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;background:var(--c-bg);color:var(--c-text);line-height:1.75}
+body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'SF Pro Display','PingFang SC','Microsoft YaHei',sans-serif;background:var(--c-bg);color:var(--c-text);line-height:1.75;-webkit-font-smoothing:antialiased}
 a{color:var(--c-accent);text-decoration:none}
 a:hover{text-decoration:underline}
 
@@ -16,6 +16,7 @@ a:hover{text-decoration:underline}
 .nav-inner a{color:#fff;opacity:.8;font-size:.88rem;font-weight:500;padding:.9rem .3rem;white-space:nowrap;border-bottom:2px solid transparent;transition:opacity .2s,border-color .2s}
 .nav-inner a:hover,.nav-inner a.active{opacity:1;text-decoration:none;border-bottom-color:var(--c-accent)}
 .nav-title{color:#fff;font-weight:700;font-size:1.05rem;margin-right:auto;white-space:nowrap}
+.nav-back{opacity:1!important;font-weight:600!important;margin-right:.5rem}
 
 /* 布局 */
 .main{max-width:1000px;margin:0 auto;padding:2rem 1.5rem 4rem}
@@ -86,7 +87,7 @@ h2:first-of-type{margin-top:0}
 
 /* 暗色模式 */
 @media(prefers-color-scheme:dark){
-  :root{--c-bg:#1e1e1e;--c-surface:#2d2d2d;--c-text:#d4d4d4;--c-muted:#999;--c-primary:#569cd6;--c-accent:#569cd6;--c-accent-light:#264f78;--c-border:#404040}
+  :root{--c-bg:#0f172a;--c-surface:#1e293b;--c-text:#cbd5e1;--c-muted:#94a3b8;--c-primary:#e2e8f0;--c-accent:#3b82f6;--c-accent-light:#1e3a5f;--c-border:#334155}
   body{color-scheme:dark}
   .glossary-table tr:nth-child(even){background:#333}
 }

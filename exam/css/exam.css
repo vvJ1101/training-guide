@@ -1,32 +1,33 @@
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
-  font-family: "Microsoft YaHei", "苹方", sans-serif;
-  background: #f0f4f8; color: #333; line-height: 1.6;
-  min-height: 100vh;
+  font-family: 'Inter',-apple-system,BlinkMacSystemFont,'SF Pro Display','PingFang SC','Microsoft YaHei',sans-serif;
+  background: #f8fafc; color: #1e293b; line-height: 1.6;
+  min-height: 100vh;-webkit-font-smoothing:antialiased;
 }
 .app {
-  max-width: 1000px; width: 100%; background: #fff;
-  border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.08);
-  padding: 2.5rem; margin: 2rem auto;
+  max-width: 960px; width: 100%; background: #fff;
+  border-radius: 16px; box-shadow: 0 4px 16px rgba(0,0,0,.06);
+  padding: 2.5rem; margin: 1.5rem auto; border: 1px solid #e2e8f0;
 }
 .hidden { display: none !important; }
-h1 { text-align: center; color: #1a2b4c; border-bottom: 3px solid #2d6ee0; padding-bottom: 0.8rem; margin-bottom: 1.5rem; }
-h2 { color: #1e3a6f; margin: 1.5rem 0 1rem; border-left: 6px solid #2d6ee0; padding-left: 0.5rem; }
+h1 { text-align: center; color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.8rem; margin-bottom: 1.5rem; font-weight:800; }
+h2 { color: #0f172a; margin: 1.5rem 0 1rem; border-left: 4px solid #2563eb; padding-left: 0.5rem; background:#eff6ff; border-radius:0 6px 6px 0; }
 h3 { margin: 1rem 0 0.5rem; }
 .form-row { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; align-items: flex-start; }
 .form-group { margin-bottom: 1rem; flex: 1; min-width: 200px; }
-label { display: block; font-weight: 600; color: #1e3a6f; margin-bottom: 0.3rem; }
+label { display: block; font-weight: 600; color: #0f172a; margin-bottom: 0.3rem; }
 input, select, textarea {
-  width: 100%; padding: 0.6rem; border: 1px solid #cbd5e1;
-  border-radius: 6px; font-size: 1rem; font-family: inherit;
+  width: 100%; padding: 0.6rem; border: 1.5px solid #e2e8f0;
+  border-radius: 8px; font-size: 1rem; font-family: inherit; transition: border-color .2s;
 }
+input:focus, select:focus, textarea:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.1)}
 select { background: white; }
 button {
-  background: #2d6ee0; color: white; border: none; padding: 0.6rem 1.5rem;
-  border-radius: 6px; font-size: 1rem; cursor: pointer; font-weight: 600;
-  transition: 0.2s; margin: 0.2rem;
+  background: #2563eb; color: white; border: none; padding: 0.6rem 1.5rem;
+  border-radius: 8px; font-size: 1rem; cursor: pointer; font-weight: 600;
+  transition: all .2s; margin: 0.2rem; font-family: inherit;
 }
-button:hover { background: #1b4fc4; }
+button:hover { background: #1d4ed8; transform: translateY(-1px); }
 button:disabled { opacity: 0.5; cursor: not-allowed; }
 button.secondary { background: #e2e8f0; color: #475569; }
 button.secondary:hover { background: #cbd5e1; }
@@ -35,14 +36,14 @@ button.danger:hover { background: #a33a2e; }
 button.success { background: #16a34a; }
 button.success:hover { background: #15803d; }
 .task-list { width: 100%; border-collapse: collapse; margin: 1rem 0; }
-.task-list th { background: #2d6ee0; color: white; padding: 10px; text-align: left; }
+.task-list th { background: #1e3a5f; color: white; padding: 10px; text-align: left; }
 .task-list td { border: 1px solid #e2e8f0; padding: 10px; vertical-align: middle; }
 .task-list tr:hover td { background: #f8faff; }
 .card {
   background: #fafbfc; border: 1px solid #e2e8f0;
   border-radius: 8px; padding: 1.2rem; margin-bottom: 1rem;
 }
-.card.active { border-color: #2d6ee0; background: #f0f4ff; }
+.card.active { border-color: #2563eb; background: #eff6ff; }
 
 /* 模板卡片 */
 .tpl-card { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; }
@@ -81,7 +82,7 @@ button.success:hover { background: #15803d; }
 
 /* 进度条 */
 .progress-bar { background: #e2e8f0; border-radius: 20px; height: 12px; overflow: hidden; margin: 1rem 0; }
-.progress-bar .fill { height: 100%; background: linear-gradient(90deg, #2d6ee0, #16a34a); border-radius: 20px; transition: width 0.4s ease; }
+.progress-bar .fill { height: 100%; background: linear-gradient(90deg, #2563eb, #16a34a); border-radius: 20px; transition: width 0.4s ease; }
 .progress-text { text-align: center; font-size: 0.9rem; color: #64748b; margin-bottom: 0.5rem; }
 
 /* 灯箱 */
@@ -103,7 +104,7 @@ button.success:hover { background: #15803d; }
   width: 95%; max-height: 90vh; overflow-y: auto; position: relative;
 }
 .modal-content table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
-.modal-content th { background: #2d6ee0; color: #fff; padding: 8px; text-align: left; }
+.modal-content th { background: #1e3a5f; color: #fff; padding: 8px; text-align: left; }
 .modal-content td { border: 1px solid #e2e8f0; padding: 8px; vertical-align: top; }
 .modal-content img { max-width: 120px; }
 .modal-close { position: absolute; top: 12px; right: 12px; background: #e2e8f0; color: #475569; padding: 4px 12px; }

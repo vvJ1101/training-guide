@@ -3,297 +3,413 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/png" href="../../logo-transparent.png">
 <title>商品部 — 康雷 & 联欣系统操作指南</title>
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 <div class="container">
-<a href="../" class="back-link">← 返回培训文档目录</a>
+<a href="../../" class="back-link">← 返回培训文档目录</a>
 <h1>商品部 — 康雷 & 联欣系统操作指南</h1>
-<div class="toc"><h3>📑 目录</h3><ol><li><a href="#sec1">二、业务流程</a></li><li><a href="#sec4">二、主题管理：主题对应小程序的品牌列表界面。</a></li></ol></div>
-<div class="search-box">
-<input type="text" id="searchInput" placeholder="🔍 搜索操作步骤…">
-<div class="search-result-count" id="searchCount"></div>
+
+<!-- 目录导航 -->
+<div class="toc">
+  <h3>📑 目录</h3>
+  <ol>
+    <li><a href="#sec1">业务流程总览</a></li>
+    <li><a href="#sec2">订单类型对比：云仓 / 现货 / 期货</a></li>
+    <li><a href="#sec3">云仓订单处理</a></li>
+    <li><a href="#sec4">现货订单处理：截单转采购 → 转发货</a></li>
+    <li><a href="#sec5">期货订单处理：截单转采购 → 预付款 → 转发货</a></li>
+    <li><a href="#sec6">同一订单二次配货出货</a></li>
+    <li><a href="#sec7">订单反审核与删单</a></li>
+    <li><a href="#sec8">客户退货与换货处理</a></li>
+    <li><a href="#sec9">联欣系统操作（新增仓库/品牌/图片）</a></li>
+    <li><a href="#sec10">主题管理</a></li>
+    <li><a href="#sec11">附录：系统基础建档速查</a></li>
+  </ol>
 </div>
 
-<p>商品部商品部商品部-联欣&康雷系统使用培训手册商品部-联欣&康雷系统使用培训手册撰写： IT技术策划-黄文君 适用部门 ： 商 品 部 撰写： IT技术策划-黄文君 适用部门 ： 商 品 部</p>
-<p>适用背景</p>
-<p>联欣软件作为订货端，供买手/店铺/客户经理等下单使用，联欣端的商品资料获取途径为：康雷ERP——>联欣订货后台康雷软件作为订单处理后台，处理市场部审核的各类型订单，通过订金、回款项目等控制发货数量，根据订货量进行截单、配货操作。品牌方仓库接收到商品部的出货指令任务后，根据指令发货，发货后同步订单发货状态到联欣系统；</p>
-<h2 id="sec1">二、业务流程</h2>
-<p>商品基础： 联欣系统的商品数据来源于康雷ERP，通过联欣后台同步。这是订货的前提。</p>
-<p>下单与审核： 买手/店铺/客户经理在 联欣订货小程序 下单 -> 市场部在联欣后台 审核订单。</p>
-<p>订单推送： 联欣后台将审核通过的订单 推送给康雷ERP，成为 “渠道订单”。</p>
-<p>订单处理（康雷核心）：</p>
-<p>截单（转采购）： 商品部 在康雷ERP中对渠道订单进行 截单 操作。这通常意味着根据订单需求 生成采购需求/采购单（如果库存不足），或者锁定库存（如果库存充足）。（关键控制点）</p>
-<p>货款控制： 康雷ERP严格管理 订金 和 回款。系统会监控订单的 货款收齐状态。</p>
-<p>配货（转发货）： 只有收齐货款的订单，商品部 才能在康雷ERP中进行 配货 操作。这通常涉及生成详细的 发货指令/发货单，明确要发什么货、发多少。（关键控制点）</p>
-<p>仓库发货： 品牌方仓库 接收到来自康雷ERP的 出货指令任务 后，进行拣货、打包、发货等实物操作。</p>
-<p>状态同步： 仓库发货操作完成后，发货状态（包括物流信息） 会从康雷ERP 同步回联欣系统。</p>
-<p>终端查看： 下单用户（买手/店铺/客户经理）可以在 联欣订货小程序 上查看到订单的发货状态和物流信息。</p>
-<p>系统资料建档说明</p>
-<p>基础建档</p>
-<img src="images/image3.png" alt="操作截图" class="screenshot-img" loading="lazy">
-<p class="caption">▲ 操作截图</p>
-<p>货品部分</p>
-<p>权限分类：可以对货品进行权限分类，初始数据库有默认值，按照品牌名称创建不同的分类，在权限控制不同的角色及用户看到不同的货品；</p>
-<img src="images/image4.png" alt="操作截图" class="screenshot-img" loading="lazy">
-<p class="caption">▲ 操作截图</p>
-<p>尺码管理：新增尺寸组（填写尺码组、尺码组名称），可供不同的货号基础信息维护时选择尺寸组（在系统里需建立企业所用的各不同尺寸组，如上衣尺寸与裤子尺寸分类不一样，需分别建立上衣尺寸组和裤子尺寸组）。在尺寸组下可以维护不同的尺寸值，不同的货号下的条码具体拥有什么尺寸值也是不一样的，需要客户给不同的条码维护该条码的尺寸；</p>
-<img src="images/image5.png" alt="操作截图" class="screenshot-img" loading="lazy">
-<p class="caption">▲ 操作截图</p>
-<p>颜色：新增颜色组，再新建颜色，填写颜色代码、描述，可供货号下的条码基础资料的维护时选择不同的颜色；</p>
-<img src="images/image6.png" alt="操作截图" class="screenshot-img" loading="lazy">
-<p class="caption">▲ 操作截图</p>
-<p>货品分类：参照上图，可对货品进行多级分类，在新增或导入商品资料的时候，必须将维护好的分类关联进去；</p>
-<img src="images/image7.png" alt="操作截图" class="screenshot-img" loading="lazy">
-<p class="caption">▲ 操作截图</p>
-<p>货品时间分类：可对时间进行三级分类，年份，季节，上市波段，在空白处右键进行新建或者编辑；</p>
-<img src="images/image8.png" alt="操作截图" class="screenshot-img" loading="lazy">
-<p class="caption">▲ 操作截图</p>
-<img src="images/image9.png" alt="操作截图" class="screenshot-img" loading="lazy">
-<p class="caption">▲ 操作截图</p>
-<p>货品规格：二维分类，一般默认为0，多数用在于西服或者文胸类产品，相当于西服的版型或者文胸的罩杯，牛仔裤的内长等；</p>
-<img src="images/image10.png" alt="操作截图" class="screenshot-img" loading="lazy">
-<p class="caption">▲ 操作截图</p>
-<p>品牌管理：维护货品的品牌；按照品牌名称新建；</p>
-<p>商品公共属性：系统提供无限个自定义商品属性，用户可以维护需要使用的属性名称和各个属性下的属性值，维护好后，可以在维护货号基础信息时定义不同货号的不同属性分类（特定情况下使用）；</p>
-<p>平台分类管理：微商城对商品的分类，如上图，货品资料里面设置完可在微商城进行分类展示，筛选；</p>
-<p>代理商品牌管理：特定情况下使用；</p>
-<p>商品公共属性：系统提供25个自定义商品属性，用户可以维护需要使用的属性名称和各个属性下的属性值，维护好后，可以在维护货号基础信息时定义不同货号的不同属性分类；</p>
-<p>货品单位管理：维护货品的单位，如套、个、件等；</p>
-<p>仓库、供应商基础信息</p>
-<p>仓库、供应商权限分类：可以对品牌的仓库进行权限分类，初始数据库有默认值，按照品牌名称创建不同的仓库和供应商的权限分类；</p>
-<img src="images/image11.png" alt="操作截图" class="screenshot-img" loading="lazy">
-<p class="caption">▲ 操作截图</p>
-<p>结算户口</p>
-<p>结算户口：由联欣创建客户资料后推送过来，户口编号为客户手机号</p>
-<img src="images/image12.png" alt="操作截图" class="screenshot-img" loading="lazy">
-<p class="caption">▲ 操作截图</p>
-<img src="images/image13.png" alt="操作截图" class="screenshot-img" loading="lazy">
-<p class="caption">▲ 操作截图</p>
-<p>店铺：可看到该结算户口下有多少家店铺（联欣后台客户经理填写店铺资料审核后后会自动生成）；</p>
-<p>商品档案</p>
-<p>货品资料</p>
-<p>货品资料：新增货号信息，权限分类要选择对应品牌的权限；涉及到聚水潭同步库存的品牌要求品牌提供相应的聚水潭商品编码。</p>
-<p>新增货号，需要填写货号、货品名称、状态、吊牌价、分类、品牌、权限分类、折扣类型、供应商编号、尺寸组、颜色、规格及各个属性值；</p>
-<img src="images/image14.png" alt="操作截图" class="screenshot-img" loading="lazy">
-<p class="caption">▲ 操作截图</p>
-<p>涉及到聚水潭同步库存的商品资料需要在【条形码对应】做导入对应关系</p>
-<img src="images/image15.png" alt="操作截图" class="screenshot-img" loading="lazy">
-<p class="caption">▲ 操作截图</p>
-<p>对应关系按照下图excel规则填写导入</p>
-<img src="images/image16.png" alt="操作截图" class="screenshot-img" loading="lazy">
-<p class="caption">▲ 操作截图</p>
-<p>价格信息：基础资料里面的自定义价格类型，可定义多种价格</p>
-<img src="images/image17.png" alt="操作截图" class="screenshot-img" loading="lazy">
-<p class="caption">▲ 操作截图</p>
-<p>颜色信息：款号对应颜色，注意，新增保存后无法删除（做错的选择停用颜色）；</p>
-<img src="images/image18.png" alt="操作截图" class="screenshot-img" loading="lazy">
-<p class="caption">▲ 操作截图</p>
-<p>尺码信息：可查看到款号对应的尺码组以及对应尺码（有色码情况下使用）；</p>
-<img src="images/image19.png" alt="操作截图" class="screenshot-img" loading="lazy">
-<p class="caption">▲ 操作截图</p>
-<p>规格信息：二维分类，一般默认为0</p>
-<img src="images/image20.png" alt="操作截图" class="screenshot-img" loading="lazy">
-<p class="caption">▲ 操作截图</p>
-<p>图片信息：由货品图片上传工具进行上传，（操作详见上传图片流程说明文档）；</p>
-<img src="images/image21.png" alt="操作截图" class="screenshot-img" loading="lazy">
-<p class="caption">▲ 操作截图</p>
-<p>货品导入：在excel里整理好商品及相应的资料、颜色、尺寸、SKU等，可直接从excel文件批量导入现成的货品资料，具体模板找咏xin要一下。</p>
-<img src="images/image23.png" alt="操作截图" class="screenshot-img" loading="lazy">
-<p class="caption">▲ 操作截图</p>
-<p>条形码资料</p>
-<p>目前的条形码是由系统按照，货号+颜色编号+尺码 自动生成的，没有特殊情况不需要管理</p>
-<img src="images/image24.png" alt="操作截图" class="screenshot-img" loading="lazy">
-<p class="caption">▲ 操作截图</p>
-<img src="images/image25.png" alt="操作截图" class="screenshot-img" loading="lazy">
-<p class="caption">▲ 操作截图</p>
-<p>条码导入：在excel里整理好商品及相应的颜色、尺寸后，可直接从excel文件批量导入现成的条码。</p>
-<img src="images/image26.png" alt="操作截图" class="screenshot-img" loading="lazy">
-<p class="caption">▲ 操作截图</p>
-<p>在【条形码管理】页，点击【生成条形码】，选择生成规则，点击【预览】，系统计算条形码并显示，系统汇总出所有需要建立条形码的每个货号的各个颜色、尺码的明细列表，点击【保存】，【确定】后，完成条形码的建立。</p>
-<img src="images/image27.png" alt="操作截图" class="screenshot-img" loading="lazy">
-<p class="caption">▲ 操作截图</p>
-<p>店铺资料</p>
-<p>由联欣后台审核客户资料后自动创建客户的店铺资料</p>
-<p>店铺资料：新增店铺资料（填写店铺编号、店铺简称、店铺名称、权限分类、所属结算户口、店铺组别、经营模式等），可供其它业务单据新增时选择店铺资料（例如零售核销单、仓库出货单、调拨单等的新增时，都需要选择店铺）。</p>
-<img src="images/image28.png" alt="操作截图" class="screenshot-img" loading="lazy">
-<p class="caption">▲ 操作截图</p>
-<p>仓库资料</p>
-<p>仓库资料：新增仓库资料（填写仓库编号、仓库名称、权限分类、仓库性质、属性描述、控制参数值等），可供其它业务单据新增时选择仓库资料（例如采购单、仓库出货单、调拨单的新增时，都需要选择仓库）。</p>
-<p>其中：</p>
-<p>权限分类需要选择与品牌一样的权限分类，云仓的仓库编号要与供应商编号一样，现货期货的仓库编号在后面加-1区分；仓库的区域选择品牌直发仓。</p>
-<img src="images/image29.png" alt="操作截图" class="screenshot-img" loading="lazy">
-<p class="caption">▲ 操作截图</p>
-<p>供应商资料</p>
-<p>供应商档案：新增供应商档案（填写供应商编号、供应商名称、供应商简称、权限分类、联系方式、供应商属性等），可供其它业务单据新增时选择供应商档案（例如采购单新增时，可以选择供应商，新增货品时也可选择供应商）。</p>
-<p>其中：</p>
-<p>权限分类需要选择与品牌一样的权限分类，供应商编号要跟品牌的云仓仓库编号一致</p>
-<img src="images/image30.png" alt="操作截图" class="screenshot-img" loading="lazy">
-<p class="caption">▲ 操作截图</p>
-<img src="images/image31.png" alt="操作截图" class="screenshot-img" loading="lazy">
-<p class="caption">▲ 操作截图</p>
-<p>设置采购价比例</p>
-<img src="images/image32.png" alt="操作截图" class="screenshot-img" loading="lazy">
-<p class="caption">▲ 操作截图</p>
-<p>系统运作流程说明</p>
-<p>销售业务流程图</p>
-<img src="images/image33.png" alt="操作截图" class="screenshot-img" loading="lazy">
-<p class="caption">▲ 操作截图</p>
-<img src="images/image34.png" alt="操作截图" class="screenshot-img" loading="lazy">
-<p class="caption">▲ 操作截图</p>
-<p>系统登陆</p>
-<p>登陆地址：http://ji121.123580.com/</p>
-<img src="images/image35.png" alt="操作截图" class="screenshot-img" loading="lazy">
-<p class="caption">▲ 操作截图</p>
-<p>云仓订单流程说明</p>
-<p>云仓单自动生成渠道订单和出货指令单和100%的回款单，不需要再经过商品部截单和转发货操作，市场部可以直接检查出货指令单没有问题便直接提交。</p>
-<img src="images/image36.png" alt="操作截图" class="screenshot-img" loading="lazy">
-<p class="caption">▲ 操作截图</p>
-<p>检查康雷生成的渠道订单数量金额与联欣是否一致</p>
-<img src="images/image37.png" alt="操作截图" class="screenshot-img" loading="lazy">
-<p class="caption">▲ 操作截图</p>
-<p>检查出货指令单号上的收件人信息是否正确，确认无误后提交单据通知品牌方发货</p>
-<img src="images/image38.png" alt="操作截图" class="screenshot-img" loading="lazy">
-<p class="caption">▲ 操作截图</p>
-<p>期货订单业务流程</p>
-<p>期货订单审单转采购流程</p>
-<p>期货订单只生成渠道订单和50%的订金收入单，需要经过商品截单转采购后通知品牌生产，待品牌生产完毕可以发货时，市场部把尾款收齐并做50%的回款单经财务审核后通知商品部操作转发货。</p>
-<img src="images/image39.png" alt="操作截图" class="screenshot-img" loading="lazy">
-<p class="caption">▲ 操作截图</p>
-<p>商品截单：通过渠道订单模块筛选品牌、截单时间段后跟市场部核对订单数据，无误后操作转采购</p>
-<img src="images/image40.png" alt="操作截图" class="screenshot-img" loading="lazy">
-<p class="caption">▲ 操作截图</p>
-<p>订单转采购（截单的具体操作）：订单审核无误后批量转采购单</p>
-<img src="images/image41.png" alt="操作截图" class="screenshot-img" loading="lazy">
-<p class="caption">▲ 操作截图</p>
-<p>生成采购单，检查无误后提交采购单，通过报表把明细导出发给品牌通知生产；</p>
-<img src="images/image42.png" alt="操作截图" class="screenshot-img" loading="lazy">
-<p class="caption">▲ 操作截图</p>
-<p>期货订单确认完采购明细后，需要预付给品牌方50%的订金款，在康雷系统对应的品牌采购单列表找到对应的采购单点击【转预付款】，填写本次采购金额的定金，按照钉钉OA流程填写对应的内容</p>
-<img src="images/image43.png" alt="操作截图" class="screenshot-img" loading="lazy">
-<p class="caption">▲ 操作截图</p>
-<p>预付款单据保存好后将单号同步到钉钉OA申请流程告知财务预付款的单号，财务审批付款并提交</p>
-<img src="images/image44.png" alt="操作截图" class="screenshot-img" loading="lazy">
-<p class="caption">▲ 操作截图</p>
-<p>期货订单转发货流程</p>
-<img src="images/image45.png" alt="操作截图" class="screenshot-img" loading="lazy">
-<p class="caption">▲ 操作截图</p>
-<p>品牌期货订单库存到位后通知YUAN商品可配货，商品部通知市场部收取客户尾款，市场部的回款单通过财务审核后，商品部操作转发货</p>
-<p>客户打款且市场部做完回款单后，商品可以点击渠道订单上的转发货，生成出货指令单，可以截图通知品牌方发货</p>
-<img src="images/image46.png" alt="操作截图" class="screenshot-img" loading="lazy">
-<p class="caption">▲ 操作截图</p>
-<p>选择出货的品牌仓库后，检查出货指令单的数量和金额，有需要调整明细的可以勾选货号后鼠标右键删除此货号，本次将不发此货号</p>
-<img src="images/image47.png" alt="操作截图" class="screenshot-img" loading="lazy">
-<p class="caption">▲ 操作截图</p>
-<p>保存后回到单据列表，点订金结转</p>
-<img src="images/image48.png" alt="操作截图" class="screenshot-img" loading="lazy">
-<p class="caption">▲ 操作截图</p>
-<p>点击订金结转，期货类型的如果渠道订单界面显示的订金比例为100%的，出货指令订金结转比例为100%；</p>
-<p>如果渠道订单界面显示的订金比例是50%且有对应回款单的结转比例为50%</p>
-<img src="images/image49.png" alt="操作截图" class="screenshot-img" loading="lazy">
-<p class="caption">▲ 操作截图</p>
-<p>订金结转后提交出货指令单通知品牌方发货</p>
-<img src="images/image50.png" alt="操作截图" class="screenshot-img" loading="lazy">
-<p class="caption">▲ 操作截图</p>
-<p>现货订单业务流程</p>
-<p>现货订单生成渠道订单、回款单（下单时市场部提交需要财务审核）、出货指令单，截单转采购后点击转发货，财务审核通过回款单后才可提交出货指令</p>
-<img src="images/image51.png" alt="操作截图" class="screenshot-img" loading="lazy">
-<p class="caption">▲ 操作截图</p>
-<p>品牌通知库存到位，可以按排客户现货订单配发货了</p>
-<p>找到相应渠道订单点转发货</p>
-<img src="images/image52.png" alt="操作截图" class="screenshot-img" loading="lazy">
-<p class="caption">▲ 操作截图</p>
-<p>100%的金额结转成货款后提交出货指令单通知品牌发货</p>
-<img src="images/image53.png" alt="操作截图" class="screenshot-img" loading="lazy">
-<p class="caption">▲ 操作截图</p>
-<img src="images/image54.png" alt="操作截图" class="screenshot-img" loading="lazy">
-<p class="caption">▲ 操作截图</p>
-<p>同一订单二次配货出货</p>
-<p>按货号查找出未发完货的订单号</p>
-<img src="images/image55.png" alt="操作截图" class="screenshot-img" loading="lazy">
-<p class="caption">▲ 操作截图</p>
-<p>选订需要发货订单点转发货</p>
-<img src="images/image56.png" alt="操作截图" class="screenshot-img" loading="lazy">
-<p class="caption">▲ 操作截图</p>
-<p>生成【出货指令单】保存后提交单据，通知品牌方发货即可</p>
-<img src="images/image57.png" alt="操作截图" class="screenshot-img" loading="lazy">
-<p class="caption">▲ 操作截图</p>
-<p>反审核单据删单</p>
-<p>反审核流程是做单顺序反向操作，例如期货订单正向顺序为：</p>
-<p>渠道订单、50%订金收入单、50%回款单、出货指令单、订金转货款----反审核顺序为逆向</p>
-<p>云仓订单：需要删除康雷生成三个单据【出货指令单】、【回款单】、【渠道订单】</p>
-<p>现货订单：回款单、出货指令单、渠道订单</p>
-<p>期货订单：订金转货款、订金收入单、出货指令单、回款单、渠道订单</p>
-<img src="images/image58.png" alt="操作截图" class="screenshot-img" loading="lazy">
-<p class="caption">▲ 操作截图</p>
-<p>客户订单取消、换货、退货</p>
-<p>订单取消：已把期货订金付给品牌，品牌没货发需要取消的，做【采购退货单】</p>
-<p>整张采购单的付款金额为取消款的订金金额。</p>
-<p>客户订单取消款：使用订单调整功能，选择对应的商品，店铺，选择订单取消保存提交后，对应订单的款便取消了</p>
-<p>订单退货：已发货订单客户退货做【渠道采购退货指令单】填写退货的品牌、退货店铺，手工单号填写原渠道订单后录入退货明细后（注意退货价跟采购价的区别，一个是客户订货价，一个是采购退货价）保存提交；</p>
-<img src="images/image59.png" alt="操作截图" class="screenshot-img" loading="lazy">
-<p class="caption">▲ 操作截图</p>
-<p>换货：</p>
-<h3 id="sec2">2.1同款同金额换货直接线下与品牌沟通寄换；</h3>
-<h3 id="sec3">2.2换不同款金额的：市场部重新在联欣下单；</h3>
-<p>客户退货：商品部在康雷系统做【渠道采购退货指令单】，填写退货的品牌、退货店铺，手工单号填写原渠道订单后录入退货明细后保存提交；</p>
-<img src="images/image59.png" alt="操作截图" class="screenshot-img" loading="lazy">
-<p class="caption">▲ 操作截图</p>
-<p>手动输入货号：鼠标光标点击商品编号输入框输入款号后按键盘回车↩ 键，弹出颜色尺码选择界面，在此输入该款号的发货的颜色和尺码；</p>
-<p>录入所有发货商品后核实发货数量无误，点击保存、提交按钮；</p>
-<p>联欣系统操作手册</p>
-<p>资料设置：新增仓库、新增品牌、上传款主图</p>
-<p>有新品牌合作时，在康雷新建好了品牌、供应商、仓库之后需要在联欣创建对应的品牌云仓，期货现货的不需要创建仓库。</p>
-<p>新增仓库：在字典管理的仓库选项点击字典项新增仓库信息，仓库编号需要跟康雷系统的编号一致</p>
-<img src="images/image60.png" alt="操作截图" class="screenshot-img" loading="lazy">
-<p class="caption">▲ 操作截图</p>
-<p>新增品牌信息：在款式属性里添加新品牌信息</p>
-<img src="images/image61.png" alt="操作截图" class="screenshot-img" loading="lazy">
-<p class="caption">▲ 操作截图</p>
-<p>上传图片可以批量上传也可以单个商品上传</p>
-<img src="images/image62.png" alt="操作截图" class="screenshot-img" loading="lazy">
-<p class="caption">▲ 操作截图</p>
-<h2 id="sec4">二、主题管理：主题对应小程序的品牌列表界面。</h2>
-<h3 id="sec5">1、添加主题：填写主题名称、业务类型、主题分组、发货仓、主题时间一般设置为后几天，不要设置到操作的当天、主题封面图等信息后提交</h3>
-<img src="images/image63.png" alt="操作截图" class="screenshot-img" loading="lazy">
-<p class="caption">▲ 操作截图</p>
-<p>提交完后设置该主题的时间、简介、店铺</p>
-<p>店铺设置为自动添加的模板，勾选yuan组织树，之后新增加的店铺都会自动添加到该主题</p>
-<img src="images/image64.png" alt="操作截图" class="screenshot-img" loading="lazy">
-<p class="caption">▲ 操作截图</p>
-<img src="images/image65.png" alt="操作截图" class="screenshot-img" loading="lazy">
-<p class="caption">▲ 操作截图</p>
-<p>主题商品添加：在主题商品界面点击选择商品</p>
-<img src="images/image66.png" alt="操作截图" class="screenshot-img" loading="lazy">
-<p class="caption">▲ 操作截图</p>
-<p>按照品牌选择该主题的商品</p>
-<img src="images/image67.png" alt="操作截图" class="screenshot-img" loading="lazy">
-<p class="caption">▲ 操作截图</p>
-<p>小程序布局替换：轮播图管理、功能模块、推广图管理</p>
-<p>轮播图管理：首页的轮播图设置为推广轮播图</p>
-<img src="images/image68.png" alt="操作截图" class="screenshot-img" loading="lazy">
-<p class="caption">▲ 操作截图</p>
-<p>功能模块：小模块对应期货、云仓入口，选择图片设置对应的主题即可</p>
-<img src="images/image69.png" alt="操作截图" class="screenshot-img" loading="lazy">
-<p class="caption">▲ 操作截图</p>
-<p>推广图管理：设置为公司公众号推文，需要获取为图片格式的上传</p>
-<img src="images/image70.png" alt="操作截图" class="screenshot-img" loading="lazy">
-<p class="caption">▲ 操作截图</p>
+<!-- 搜索框 -->
+<div class="search-box">
+  <input type="text" id="searchInput" placeholder="🔍 搜索操作步骤…">
+  <div class="search-result-count" id="searchCount"></div>
+</div>
+
+<!-- 系统关系说明 -->
+<div class="note-box" style="display:block; margin-bottom:1rem;">
+  <strong>📖 系统关系</strong>
+  <p style="margin-top:0.5rem;">联欣 = 订货端（买手/店铺/客户经理下单）← 商品数据来源于康雷。康雷 = 订单处理后台，处理审核通过的订单，通过订金/回款控制发货数量。</p>
+  <p><strong>登陆地址：</strong>http://ji121.123580.com/</p>
+</div>
+
+<!-- 术语表 -->
+<div class="note-box" style="display:block; margin-bottom:2rem;">
+  <strong>📖 商品部核心术语（新人先看这里）</strong>
+  <table style="margin:0.8rem 0 0;">
+    <thead>
+    <tr><th style="width:120px;">术语</th><th>说明</th></tr>
+    </thead>
+    <tbody>
+    <tr><td>截单</td><td>在渠道订单模块按品牌和时间段筛选订单，批量转为采购需求</td></tr>
+    <tr><td>转采购</td><td>截单后生成采购单的操作，采购明细会导出通知品牌方生产/备货</td></tr>
+    <tr><td>转发货</td><td>在渠道订单上点击"转发货"，生成<strong>出货指令单</strong>通知品牌方发货</td></tr>
+    <tr><td>订金结转</td><td>发货前将已收订金转为货款的操作，结转比例取决于订金比例（50%或100%）</td></tr>
+    <tr><td>预付款</td><td>截单后付给品牌方的50%订金，由商品部创建单据、财务部付款</td></tr>
+  </tbody>
+</table>
+</div>
+
+<!-- 1. 业务流程总览 -->
+<h2 id="sec1">1. 业务流程总览</h2>
+<p><strong>责任人：商品部</strong></p>
+<div class="flow-text">
+  联欣订货小程序下单 → 市场部联欣审核 → 康雷生成渠道订单 → 商品部截单转采购 → 市场部回款 → 商品部转发货 → 品牌方发货 → 状态同步联欣
+</div>
+<img src="images/image33.png" alt="销售业务流程图-1" class="screenshot-img" loading="lazy">
+<p class="caption">▲ 销售业务流程图</p>
+<img src="images/image34.png" alt="销售业务流程图-2" class="screenshot-img" loading="lazy">
+<p class="caption">▲ 系统登陆界面</p>
+
+<!-- 2. 订单类型对比 -->
+<h2 id="sec2">2. 订单类型对比：云仓 / 现货 / 期货</h2>
+<p><strong>责任人：商品部</strong></p>
+<table>
+  <thead>
+    <tr><th>对比维度</th><th>云仓</th><th>现货</th><th>期货</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>商品部核心操作</td>
+      <td><strong>仅检查数据</strong>，无需截单和转发货</td>
+      <td><strong>截单→等回款→转发货</strong></td>
+      <td><strong>截单→付预付款→等尾款→转发货</strong></td>
+    </tr>
+    <tr>
+      <td>是否截单</td>
+      <td>无需截单</td>
+      <td>需要截单转采购</td>
+      <td>需要截单转采购</td>
+    </tr>
+    <tr>
+      <td>转发货触发条件</td>
+      <td>市场部自行转发货</td>
+      <td>回款审核通过后转发货</td>
+      <td>尾款收齐且财务审核后转发货</td>
+    </tr>
+    <tr>
+      <td>生成单据</td>
+      <td>渠道订单 + 出货指令单 + 100%回款单</td>
+      <td>渠道订单 + 回款单 + 出货指令单</td>
+      <td>渠道订单 + 50%订金收入单</td>
+    </tr>
+    <tr>
+      <td>订金结转</td>
+      <td>不涉及</td>
+      <td>100%结转</td>
+      <td>按订金比例结转（50%或100%）</td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- 3. 云仓订单处理 -->
+<h2 id="sec3">3. 云仓订单处理</h2>
+<p><strong>责任人：商品部</strong></p>
+<div class="flow-summary">
+  <strong>⚡ 商品部职责：</strong>检查渠道订单数据即可，无需截单和转发货（市场部自行处理回款和提交出货指令）
+</div>
+<ol>
+  <li>云仓单自动生成<strong>渠道订单、出货指令单、100%回款单</strong></li>
+  <li>检查康雷生成的渠道订单<strong>数量、金额</strong>与联欣是否一致
+    <img src="images/image36.png" alt="云仓订单流程" class="screenshot-img" loading="lazy">
+    <p class="caption">▲ 云仓订单流程总览</p>
+    <img src="images/image37.png" alt="检查渠道订单-数量金额" class="screenshot-img" loading="lazy">
+    <p class="caption">▲ 检查渠道订单数量金额与联欣是否一致</p>
+  </li>
+  <li>检查出货指令单上的<strong>收件人信息</strong>是否正确，确认无误后提交单据通知品牌方发货
+    <img src="images/image38.png" alt="检查出货指令单收件信息" class="screenshot-img" loading="lazy">
+    <p class="caption">▲ 检查出货指令单收件人信息</p>
+  </li>
+</ol>
+
+<!-- 4. 现货订单处理 -->
+<h2 id="sec4">4. 现货订单处理：截单转采购 → 转发货</h2>
+<p><strong>责任人：商品部</strong></p>
+<div class="flow-summary">
+  <strong>⚡ 现货 3 步走：</strong>① 截单转采购 → ② 等待回款审核通过 → ③ 转发货并提交出货指令
+</div>
+
+<h3>4.1 截单转采购</h3>
+<p>品牌通知库存到位后，可以安排客户现货订单配发货：</p>
+<ol>
+  <li>通过渠道订单模块筛选<strong>品牌、截单时间段</strong></li>
+  <li>与市场部核对订单数据无误后，操作<strong>转采购</strong></li>
+</ol>
+<div class="note-box">
+  <span>现货截单操作界面与期货截单完全一致，参见 <a href="#sec5">第5节 期货截单转采购</a> 的截图。</span>
+</div>
+<img src="images/image51.png" alt="现货订单业务流程" class="screenshot-img" loading="lazy">
+<p class="caption">▲ 现货订单业务流程</p>
+
+<h3>4.2 转发货</h3>
+<p>财务审核通过回款单后，才能提交出货指令：</p>
+<ol>
+  <li>找到相应渠道订单，点击<strong>转发货</strong>
+    <img src="images/image52.png" alt="现货-点击转发货" class="screenshot-img" loading="lazy">
+    <p class="caption">▲ 找到渠道订单点转发货</p>
+  </li>
+  <li>选择出货的品牌仓库，检查出货指令单的<strong>数量和金额</strong>，有需要调整明细的可勾选货号后右键删除
+    <img src="images/image53.png" alt="100%金额结转" class="screenshot-img" loading="lazy">
+    <p class="caption">▲ 选择仓库，检查数量和金额</p>
+  </li>
+  <li><strong>100%</strong>的金额结转成货款后，提交出货指令单通知品牌发货
+    <img src="images/image54.png" alt="提交出货指令单" class="screenshot-img" loading="lazy">
+    <p class="caption">▲ 提交出货指令单通知品牌发货</p>
+  </li>
+</ol>
+
+<!-- 5. 期货订单处理 -->
+<h2 id="sec5">5. 期货订单处理：截单转采购 → 预付款 → 转发货</h2>
+<p><strong>责任人：商品部</strong></p>
+<div class="flow-summary">
+  <strong>⚡ 期货 5 步走：</strong>① 截单转采购 → ② 生成采购单导出给品牌 → ③ 付50%预付款 → ④ 等待品牌生产完毕+尾款收齐 → ⑤ 转发货并订金结转
+</div>
+
+<h3>5.1 截单转采购</h3>
+<ol>
+  <li>期货订单只生成<strong>渠道订单和50%订金收入单</strong>，需商品部截单转采购后通知品牌生产
+    <img src="images/image39.png" alt="期货订单业务流程" class="screenshot-img" loading="lazy">
+    <p class="caption">▲ 期货订单业务流程总览</p>
+  </li>
+  <li>通过渠道订单模块筛选<strong>品牌、截单时间段</strong>，与市场部核对数据无误后操作转采购
+    <img src="images/image40.png" alt="商品截单-筛选" class="screenshot-img" loading="lazy">
+    <p class="caption">▲ 渠道订单模块筛选品牌和截单时间</p>
+    <img src="images/image41.png" alt="批量转采购单" class="screenshot-img" loading="lazy">
+    <p class="caption">▲ 订单审核无误后批量转采购单</p>
+  </li>
+  <li>生成<strong>采购单</strong>，检查无误后提交，通过报表把明细分品牌导出并发送给品牌通知生产
+    <img src="images/image42.png" alt="生成采购单" class="screenshot-img" loading="lazy">
+    <p class="caption">▲ 生成采购单并导出采购明细</p>
+  </li>
+</ol>
+
+<h3>5.2 支付品牌预付款</h3>
+<ol>
+  <li>在康雷对应品牌采购单列表找到采购单，点击<strong>转预付款</strong></li>
+  <li>填写本次采购金额的<strong>50%订金</strong>，按照钉钉 OA 流程填写对应内容
+    <img src="images/image43.png" alt="转预付款操作" class="screenshot-img" loading="lazy">
+    <p class="caption">▲ 采购单转预付款</p>
+  </li>
+  <li>预付款单据保存后，将单号同步到<strong>钉钉 OA 申请流程</strong>告知财务预付款单号，财务审批付款并提交
+    <img src="images/image44.png" alt="预付款单据同步OA" class="screenshot-img" loading="lazy">
+    <p class="caption">▲ 预付款单据保存后同步钉钉 OA</p>
+  </li>
+</ol>
+
+<h3>5.3 转发货（品牌生产完毕、客户尾款收齐后）</h3>
+<ol>
+  <li>品牌期货库存到位后通知 YUAN 商品可配货，商品部通知市场部收取客户尾款
+    <img src="images/image45.png" alt="期货订单转发货流程" class="screenshot-img" loading="lazy">
+    <p class="caption">▲ 期货订单转发货流程</p>
+  </li>
+  <li>市场部回款单经财务审核通过后，点击渠道订单上的<strong>转发货</strong>，生成出货指令单
+    <img src="images/image46.png" alt="点击转发货生成出货指令" class="screenshot-img" loading="lazy">
+    <p class="caption">▲ 市场部回款审核通过后操作转发货</p>
+  </li>
+  <li>选择出货品牌仓库后，检查出货指令单的<strong>数量和金额</strong>，需调整明细的勾选货号右键删除
+    <img src="images/image47.png" alt="选择仓库调整明细" class="screenshot-img" loading="lazy">
+    <p class="caption">▲ 选择出货仓库并调整明细</p>
+  </li>
+  <li>保存后回到单据列表，点击<strong>订金结转</strong>
+    <img src="images/image48.png" alt="保存回到单据列表" class="screenshot-img" loading="lazy">
+    <p class="caption">▲ 保存后点订金结转</p>
+  </li>
+  <li>根据渠道订单显示的订金比例确定结转比例：
+    <ul>
+      <li>订金比例为<strong>100%</strong>的 → 结转比例为 100%</li>
+      <li>订金比例为<strong>50%</strong>且有对应回款单的 → 结转比例为 50%</li>
+    </ul>
+    <img src="images/image49.png" alt="订金结转比例" class="screenshot-img" loading="lazy">
+    <p class="caption">▲ 根据订金比例确定结转比例</p>
+  </li>
+  <li>订金结转后<strong>提交出货指令单</strong>通知品牌方发货
+    <img src="images/image50.png" alt="提交出货指令单" class="screenshot-img" loading="lazy">
+    <p class="caption">▲ 订金结转后提交出货指令单</p>
+  </li>
+</ol>
+
+<!-- 6. 二次配货 -->
+<h2 id="sec6">6. 同一订单二次配货出货</h2>
+<p><strong>责任人：商品部</strong></p>
+<div class="flow-summary">
+  <strong>⚡ 操作：</strong>按货号查找未发完货订单 → 选择订单点转发货 → 后续操作与首次转发货一致
+</div>
+<p>同一订单部分商品首批未发完，后续补发时：</p>
+<ol>
+  <li>按<strong>货号</strong>查找出未发完货的订单号
+    <img src="images/image55.png" alt="查找未发完货订单" class="screenshot-img" loading="lazy">
+    <p class="caption">▲ 按货号查找未发完货的订单</p>
+  </li>
+  <li>选择需要发货的订单，点击<strong>转发货</strong>
+    <img src="images/image56.png" alt="选择需要发货的订单" class="screenshot-img" loading="lazy">
+    <p class="caption">▲ 选择订单点转发货</p>
+  </li>
+  <li>后续操作（生成出货指令单、检查明细、保存提交）与首次转发货一致，参见 <a href="#sec4">第4节</a> 或 <a href="#sec5">第5节</a></li>
+</ol>
+
+<!-- 7. 反审核与删单 -->
+<h2 id="sec7">7. 订单反审核与删单</h2>
+<p><strong>责任人：商品部</strong></p>
+<div class="highlight-box">
+  <span>反审核流程为做单顺序的逆向操作，删除单据必须按顺序反审核。</span>
+</div>
+
+<table>
+  <thead>
+    <tr><th>订单类型</th><th>删除顺序（从前往后）</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><strong>云仓</strong></td><td>① 出货指令单 → ② 回款单 → ③ 渠道订单</td></tr>
+    <tr><td><strong>现货</strong></td><td>① 回款单 → ② 出货指令单 → ③ 渠道订单</td></tr>
+    <tr><td><strong>期货</strong></td><td>① 订金转货款 → ② 订金收入单 → ③ 出货指令单 → ④ 回款单 → ⑤ 渠道订单</td></tr>
+  </tbody>
+</table>
+<img src="images/image58.png" alt="反审核删单操作" class="screenshot-img" loading="lazy">
+<p class="caption">▲ 反审核单据删单操作</p>
+
+<!-- 8. 退货与换货 -->
+<h2 id="sec8">8. 客户退货与换货处理</h2>
+<p><strong>责任人：商品部</strong></p>
+
+<h3>8.1 换货</h3>
+<ul>
+  <li><strong>同款同金额换货</strong>：直接线下与品牌沟通寄换，无需系统操作</li>
+  <li><strong>换不同款/不同金额</strong>：市场部重新在联欣下单，商品部在康雷做退货处理</li>
+</ul>
+
+<h3>8.2 退货</h3>
+<div class="flow-summary">
+  <strong>⚡ 操作路径：</strong>康雷 → 渠道采购退货指令单 → 填写退货信息 → 录入退货明细 → 保存提交
+</div>
+<ol>
+  <li>在康雷系统做<strong>渠道采购退货指令单</strong></li>
+  <li>填写退货的品牌、退货店铺，手工单号填写<strong>原渠道订单号</strong></li>
+  <li>录入退货明细（注意<strong>退货价</strong>与<strong>采购价</strong>的区别：一个是客户订货价，一个是采购退货价）</li>
+  <li>保存提交</li>
+</ol>
+<img src="images/image59.png" alt="渠道采购退货指令单" class="screenshot-img" loading="lazy">
+<p class="caption">▲ 渠道采购退货指令单操作</p>
+
+<h3>8.3 订单取消（已付订金品牌没货发）</h3>
+<p>对于期货已付订金但品牌没货需要取消的情况，制作<strong>采购退货单</strong>，整张采购单的付款金额为取消款的订金金额。</p>
+
+<!-- 9. 联欣系统操作 -->
+<h2 id="sec9">9. 联欣系统操作（新增仓库/品牌/图片）</h2>
+<p><strong>责任人：商品部</strong></p>
+<div class="note-box">
+  <span>有新品牌合作时，在康雷新建好品牌、供应商、仓库后，需同步在联欣创建对应的品牌云仓（期货/现货不需要创建仓库）。</span>
+</div>
+
+<h3>9.1 新增仓库</h3>
+<p>在字典管理的仓库选项点击<strong>字典项新增</strong>仓库信息，仓库编号需与康雷系统编号一致。</p>
+<img src="images/image60.png" alt="联欣新增仓库" class="screenshot-img" loading="lazy">
+<p class="caption">▲ 联欣字典管理 - 新增仓库</p>
+
+<h3>9.2 新增品牌</h3>
+<p>在<strong>款式属性</strong>里添加新品牌信息。</p>
+<img src="images/image61.png" alt="联欣新增品牌" class="screenshot-img" loading="lazy">
+<p class="caption">▲ 联欣款式属性 - 新增品牌</p>
+
+<h3>9.3 上传商品图片</h3>
+<p>支持<strong>批量上传</strong>或<strong>单个商品上传</strong>。</p>
+<img src="images/image62.png" alt="上传商品图片" class="screenshot-img" loading="lazy">
+<p class="caption">▲ 联欣商品图片上传</p>
+
+<!-- 10. 主题管理 -->
+<h2 id="sec10">10. 主题管理</h2>
+<p><strong>责任人：商品部</strong></p>
+<div class="flow-summary">
+  <strong>⚡ 主题 = 小程序品牌列表界面。</strong>含 4 个部分：添加主题 → 设置时间/店铺 → 添加主题商品 → 小程序布局
+</div>
+
+<h3>10.1 添加主题</h3>
+<ol>
+  <li>填写主题名称、业务类型、主题分组、发货仓、主题封面图等信息后提交
+    <div class="note-box">
+      <span>主题时间一般设置为后几天，不要设置到操作的当天。</span>
+    </div>
+    <img src="images/image63.png" alt="添加主题" class="screenshot-img" loading="lazy">
+    <p class="caption">▲ 添加主题 - 填写基本信息</p>
+  </li>
+  <li>设置该主题的<strong>时间、简介、店铺</strong>（店铺设置为自动添加模板，勾选 YUAN 组织树后新增店铺自动添加到该主题）
+    <img src="images/image64.png" alt="设置主题时间简介店铺" class="screenshot-img" loading="lazy">
+    <p class="caption">▲ 主题时间、简介、店铺设置</p>
+    <img src="images/image65.png" alt="店铺自动添加模板" class="screenshot-img" loading="lazy">
+    <p class="caption">▲ 勾选组织树自动添加店铺</p>
+  </li>
+</ol>
+
+<h3>10.2 主题商品添加</h3>
+<ol>
+  <li>在主题商品界面点击<strong>选择商品</strong>
+    <img src="images/image66.png" alt="主题商品界面" class="screenshot-img" loading="lazy">
+    <p class="caption">▲ 主题商品 - 点击选择商品</p>
+  </li>
+  <li>按照<strong>品牌</strong>选择该主题的商品
+    <img src="images/image67.png" alt="按品牌选择商品" class="screenshot-img" loading="lazy">
+    <p class="caption">▲ 按品牌筛选选择商品</p>
+  </li>
+</ol>
+
+<h3>10.3 小程序布局替换</h3>
+<table>
+  <thead>
+    <tr><th>模块</th><th>说明</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>轮播图管理</td><td>首页轮播图设置为<strong>推广轮播图</strong></td></tr>
+    <tr><td>功能模块</td><td>对应期货、云仓入口，选择图片设置对应的主题</td></tr>
+    <tr><td>推广图管理</td><td>设置为公司公众号推文，需获取为图片格式上传</td></tr>
+  </tbody>
+</table>
+<img src="images/image68.png" alt="轮播图管理" class="screenshot-img" loading="lazy">
+<p class="caption">▲ 轮播图管理</p>
+<img src="images/image69.png" alt="功能模块设置" class="screenshot-img" loading="lazy">
+<p class="caption">▲ 功能模块 - 期货/云仓入口</p>
+<img src="images/image70.png" alt="推广图管理" class="screenshot-img" loading="lazy">
+<p class="caption">▲ 推广图管理</p>
+
+<!-- 11. 附录：系统基础建档 -->
+<h2 id="sec11">11. 附录：系统基础建档速查</h2>
+<div class="note-box">
+  <span>以下内容仅在首次配置或新增品牌时涉及，日常操作可跳过。</span>
+</div>
+
+<table>
+  <thead>
+    <tr><th>建档大类</th><th>建档项</th><th>关键说明</th></tr>
+  </thead>
+  <tbody>
+    <tr><td rowspan="3">货品基础</td><td>货品资料</td><td>新增货号需填写：货号、名称、吊牌价、分类、品牌、权限分类、折扣类型、尺寸组、颜色、规格等；支持 Excel 批量导入</td></tr>
+    <tr><td>条形码</td><td>系统按"货号+颜色编号+尺码"自动生成；聚水潭品牌需在条形码对应做 Excel 导入</td></tr>
+    <tr><td>图片信息</td><td>由货品图片上传工具操作，支持批量/单个上传</td></tr>
+    <tr><td rowspan="4">分类体系</td><td>权限分类</td><td>按品牌创建，控制角色/用户可见范围</td></tr>
+    <tr><td>货品分类</td><td>多级分类，新增/导入商品时须关联</td></tr>
+    <tr><td>货品时间分类</td><td>三级：年份 → 季节 → 上市波段</td></tr>
+    <tr><td>尺码/颜色/规格</td><td>按需建立尺寸组、颜色组；规格默认0，用于西服版型/文胸罩杯等</td></tr>
+    <tr><td rowspan="3">仓库/供应商</td><td>仓库资料</td><td>云仓仓库编号=供应商编号；现货/期货编号后加-1；区域选"品牌直发仓"</td></tr>
+    <tr><td>供应商档案</td><td>供应商编号=品牌云仓仓库编号，权限分类=品牌权限分类</td></tr>
+    <tr><td>结算户口/店铺</td><td>联欣推送自动创建，户口编号=客户手机号</td></tr>
+  </tbody>
+</table>
+<img src="images/image3.png" alt="基础建档总览" class="screenshot-img" loading="lazy">
+<p class="caption">▲ 系统基础建档总览</p>
+
 <div class="footer">
-<p>市场部内部培训专用 · 请以最新系统实际界面为准</p>
+  YUAN内部培训专用 · 请以最新系统实际界面为准<br>
+  <button class="print-btn" onclick="window.print()">🖨️ 打印 / 导出PDF</button>
 </div>
 </div>
-<script>
-(function(){
-var q=document.getElementById("searchInput"),c=document.getElementById("searchCount"),
-hs=document.querySelectorAll("h2,h3"),ps=document.querySelectorAll("p,li,table,img");
-q.addEventListener("input",function(){
-var s=this.value.trim().toLowerCase(),n=0;
-ps.forEach(function(el){if(!s||el.textContent.toLowerCase().indexOf(s)!==-1){el.style.display="";n++}else{el.style.display="none"}});
-hs.forEach(function(h){h.style.display=""});
-c.textContent=s?"找到 "+n+" 处匹配":"";
-})})();
-</script>
+<script src="js/main.js"></script>
 </body>
 </html>
