@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FAQ 知识库 — 康雷&联欣系统（内部）</title>
+<link rel="stylesheet" href="css/faq.css">
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <span class="nav-title">FAQ 知识库</span>
+    <a href="index.html" class="active">内部操作</a>
+    <a href="brand-external.html">合作品牌方</a>
+  </div>
+</nav>
+
+<div class="main">
+
+<div class="hero">
+  <h1>康雷 & 联欣系统 FAQ 知识库</h1>
+  <p>市场部 · 商品部 · 品牌部 · 财务部 ｜ 基于最新培训文档整理</p>
+</div>
+
+<!-- ====== 搜索 ====== -->
+<div class="search-wrap">
+  <input type="text" id="search" placeholder="搜索问题...（如：云仓怎么操作、回款单审核、余额支付、截单转采购）">
+  <div class="search-info" id="info">共 28 条问答</div>
+</div>
+
+<!-- ====== 一、市场部 ====== -->
+<h2>一、市场部</h2>
+<p style="color:var(--c-muted);margin-bottom:1rem;font-size:.9rem">责任人：市场部 ｜ 文档：联欣&康雷系统操作手册 V2、客户报名&订货流程</p>
+
+<div class="faq-item" data-keywords="云仓 现货 期货 区分 怎么看 订单类型"><div class="q">Q1: 云仓、现货、期货怎么区分？订单审核时最容易错在哪里？</div><div class="a"><p>在联欣后台「主题订单」页面，根据订单主题类型设置标签，这是最关键的步骤：</p><ul><li><strong>云仓</strong>：实时库存，下单即有货可发</li><li><strong>现货</strong>：现货库存，需要商品部截单日统一截单</li><li><strong>期货</strong>：需要生产周期，品牌下单后才生产</li></ul><p class="warn">严禁云仓主体与期货/现货标签混淆，一旦设错，订单推送到康雷后流程全乱。</p></div></div>
+
+<div class="faq-item" data-keywords="云仓 3步 流程"><div class="q">Q2: 云仓订单的完整操作流程是什么？</div><div class="a"><p><strong>3 步走：</strong></p><ol><li><strong>检查渠道订单</strong>：确认订单号、客户名称、商品信息与联欣一致</li><li><strong>回款登记</strong>：在【回款单管理】菜单找到对应回款单 → 编辑，填写付款方式、收款金额，上传付款凭证 → 保存后<span class="tag tag-info">提交自行审核</span>（云仓由提交人自行审核，无需财务介入）</li><li><strong>提交出货指令单</strong>：核对收件地址等信息，无误后提交，品牌即可发货</li></ol><p class="note">云仓不需经过商品部截单和转发货操作。</p></div></div>
+
+<div class="faq-item" data-keywords="回款单 怎么填 规范 运费 税费 应收费用单"><div class="q">Q3: 回款单填写有什么规范？为什么会被退回？</div><div class="a"><p><strong>三个必填项缺一不可：</strong></p><ul><li>客户付款方式（银行转账/微信/支付宝等）</li><li>收款金额</li><li>付款凭证截图（必须清晰完整）</li></ul><p>信息填写不规范将被财务退回，影响发货时效。</p><p class="note"><strong>含运费/税费的特别处理：</strong>回款金额须与订单金额一致。若回款包含了运费或税费，多余部分会自动转入客户余额。需在对应渠道订单下点击「增加费用」→ 制作<strong>应收费用单</strong>冲减运费/税费。</p></div></div>
+
+<div class="faq-item" data-keywords="现货 我该做什么 区别 云仓"><div class="q">Q4: 现货订单我（市场部）需要做什么？和云仓有什么区别？</div><div class="a"><p><strong>实际上你只需要做一件事：回款登记。</strong></p><p>现货完整链路是：联欣审核 → 同步康雷 → <strong>商品部</strong>截单日统一截单转采购 → <strong>你（市场部）</strong>做回款登记（提交财务审核）→ <strong>商品部</strong>提交出货指令 → 品牌发货。</p><p>区别：<span class="tag tag-warn">云仓：自行审核回款</span> <span class="tag tag-info">现货：提交财务审核回款</span>，且<strong>你不接触发货指令</strong>。</p></div></div>
+
+<div class="faq-item" data-keywords="期货 我该做什么 订金 尾款 转回款"><div class="q">Q5: 期货订单的操作流程？订金和尾款分别怎么处理？</div><div class="a"><ul><li><strong>收订金（期货下单后）</strong>：通过渠道订单号查找订金收入单 → 编辑 → 选择付款方式 → 保存提交</li><li><strong>收尾款（品牌生产完毕可发货时）</strong>：统一使用<strong>「转回款」</strong>操作——在【渠道订单】页面找到对应订单，点击「转回款」按钮 → 选择付款方式、填写收款金额、上传凭证 → 提交。该操作会生成对应的回款单。</li></ul><p>期货完整链路：联欣审核 → 商品部截单转采购 → 你收订金 → 品牌生产 → 你收尾款 → 财务审核 → 商品部转发货。</p></div></div>
+
+<div class="faq-item" data-keywords="余额支付 余额不足 混合支付 余额转入 余额充值"><div class="q">Q6: 余额支付和余额充值怎么操作？</div><div class="a"><p><strong>余额支付（使用已有余额抵扣货款）：</strong></p><ul><li>余额充足（整单用余额）：在【渠道订单】页面勾选对应订单 → 点击「余额转入」按钮 → 进入【应收余额转账单】界面 → 选择客户余额账号 → 输入支付额度 → 上传余额使用截图 → 保存提交</li><li>余额不足（混合支付）：余额部分做「余额转入」抵扣单 + 现金部分做回款单（一张回款单 + 一张余额转账单）</li></ul><p><strong>余额充值（客户往余额账户充钱）：</strong></p><ul><li>新建回款单 → 选择品牌余额账号（<span class="tag tag-danger">账号必须与品牌严格对应</span>，如 YEE SILS089 对应 YEE S 品牌）→ 填支付方式、充值金额、上传凭证 → 提交<span class="tag tag-info">财务审核</span></li></ul></div></div>
+
+<div class="faq-item" data-keywords="换货 退货 取消 订单取消 退换货 私下 品牌"><div class="q">Q7: 客户要退换货/取消订单怎么处理？</div><div class="a"><p class="warn">严禁市场部私自与品牌沟通退换货！不经过系统处理会导致商品部和财务部月结核算数据不准确。</p><p class="note">所有删除操作前需在【单据反审核】模块中先完成反审核，否则无法删除。</p><table><tr><th>场景</th><th>操作</th></tr><tr><td>换同等金额款式</td><td>线下联系商品部换货，<strong>无需系统操作</strong></td></tr><tr><td>换款后有差额</td><td>市场部在联欣重新下单 + 商品部在康雷做退货处理</td></tr><tr><td>云仓未发货取消（退款）</td><td>删除三张单据：出货指令单 → 回款单 → 渠道订单</td></tr><tr><td>云仓未发货取消（存售后款）</td><td>仅删除出货指令单，通知商品部将订单标记为完成</td></tr><tr><td>使用余额支付订单取消</td><td>删出货指令单 + 渠道订单 → 做反向应收余额转账单将余额转回</td></tr><tr><td>已发货退货</td><td>联系商品部做退货处理（所有取消都必须经商品部）</td></tr></table></div></div>
+
+<!-- ====== 二、商品部 ====== -->
+<h2>二、商品部</h2>
+<p style="color:var(--c-muted);margin-bottom:1rem;font-size:.9rem">责任人：商品部 ｜ 文档：康雷&联欣系统操作手册 V2、联欣系统操作手册</p>
+
+<div class="faq-item" data-keywords="截单 转采购 怎么操作 步骤 商品部"><div class="q">Q1: 截单转采购（期货/现货）的具体操作步骤？</div><div class="a"><ol><li>在康雷「渠道订单」模块，筛选品牌、截单时间段</li><li>跟市场部核对订单数据，无误后批量勾选订单</li><li>点击「转采购」→ 系统自动生成采购单</li><li>检查采购单数量和金额，确认无误后提交</li><li>通过采购单报表导出明细发给品牌方，通知生产</li></ol><p class="note">云仓订单不需要经过截单，自动生成出货指令单。</p></div></div>
+
+<div class="faq-item" data-keywords="预付款 期货 订金 50% 钉钉 OA 采购单"><div class="q">Q2: 期货转预付款怎么做？和钉钉 OA 怎么衔接？</div><div class="a"><ol><li>期货订单截单转采购后，在【采购单】列表找到对应的采购单</li><li>点击「转预付款」按钮 → 进入【预付款】界面，填写本次采购金额的 50% 订金</li><li>预付款单据保存后，将单号同步到钉钉 OA 流程，告知财务预付款单号</li><li>财务审批付款并提交预付款单据</li></ol></div></div>
+
+<div class="faq-item" data-keywords="转发货 期货 现货 订金结转 出货指令单"><div class="q">Q3: 转发货怎么操作？期货和现货有什么区别？</div><div class="a"><p><strong>期货转发货：</strong></p><ol><li>品牌通知库存到位 → 商品部通知市场部收尾款</li><li>市场部回款单通过财务审核后，在渠道订单上点击「转发货」</li><li>选择品牌仓库 → 检查出货指令单明细（可右键删除本次不发的货号）</li><li>点击「订金结转」（渠道订单订金比例 100% 则结转 100%；50% 且有回款单则结转 50%）</li><li>提交出货指令单，通知品牌发货</li></ol><p><strong>现货转发货：</strong></p><ol><li>品牌通知库存到位 → 找到渠道订单点击「转发货」</li><li>100% 金额结转成货款 → 提交出货指令单通知品牌发货</li></ol><p class="note">云仓不用商品部转发货，由市场部直接提交。</p></div></div>
+
+<div class="faq-item" data-keywords="新品牌 上线 建档 需要建什么 仓库 供应商 联欣"><div class="q">Q4: 新品牌上线需要在康雷和联欣分别建哪些档案？</div><div class="a"><p><strong>康雷系统（ERP）：</strong></p><ul><li>货品资料：权限分类、货号、吊牌价、品牌分类、尺寸组、颜色等</li><li>条形码：系统自动生成（货号+颜色编号+尺码）或 Excel 批量导入</li><li>仓库资料：权限分类与品牌一致。云仓仓库编号 = 供应商编号；现货期货仓库编号 = 供应商编号-1；区域选「品牌直发仓」</li><li>供应商档案：编号与云仓仓库编号一致，设置采购价比例</li></ul><p><strong>联欣系统：</strong></p><ul><li>字典管理 → 新建仓库（编号与康雷一致。注意：只需建云仓仓库，期货现货不需要建）</li><li>款式属性 → 添加新品牌信息</li><li>主题管理 → 新建主题 → 关联商品 → 设置小程序展示</li></ul></div></div>
+
+<div class="faq-item" data-keywords="条形码 生成 导入 货号 颜色 尺码"><div class="q">Q5: 条形码的生成规则和批量导入方法？</div><div class="a"><ul><li><strong>自动生成规则：</strong>货号 + 颜色编号 + 尺码</li><li><strong>生成步骤：</strong>条形码管理 → 点击「生成条形码」→ 选择生成规则 → 预览 → 系统汇总所有需要建立条形码的货号明细 → 点击保存确定</li><li><strong>Excel 批量导入：</strong>在 Excel 整理好商品的颜色、尺码后，直接从文件批量导入条码</li><li>涉及聚水潭同步库存的品牌，商品资料需在「条形码对应」做导入对应关系</li></ul></div></div>
+
+<div class="faq-item" data-keywords="删单 反审核 顺序 删除 正向 逆向 云仓 现货 期货"><div class="q">Q6: 反审核删单的正确顺序是什么？三种订单各有什么区别？</div><div class="a"><p><strong>核心原则：反审核顺序是做单顺序的逆向操作。</strong>所有删除操作前，必须先在【单据反审核】模块完成反审核。</p><table><tr><th>订单类型</th><th>正向顺序（做单）</th><th>反审核逆向顺序（删单）</th></tr><tr><td>云仓</td><td>渠道订单 → 回款单 → 出货指令单</td><td>出货指令单 → 回款单 → 渠道订单</td></tr><tr><td>现货</td><td>渠道订单 → 回款单 → 出货指令单</td><td>回款单 → 出货指令单 → 渠道订单</td></tr><tr><td>期货</td><td>渠道订单 → 订金收入单 → 回款单 → 出货指令单 → 订金转货款</td><td>订金转货款 → 订金收入单 → 出货指令单 → 回款单 → 渠道订单</td></tr></table></div></div>
+
+<div class="faq-item" data-keywords="二次配货 拆单 同一订单 分批发货"><div class="q">Q7: 同一订单需要分批多次发货（二次配货）怎么操作？</div><div class="a"><ol><li>按货号查找未发完货的订单号</li><li>勾选需要发货的订单，点击「转发货」</li><li>生成出货指令单 → 保存后提交 → 通知品牌方发货</li><li>如后续还需发货，与品牌方沟通后重复以上步骤，商品部再次推送发货单</li></ol></div></div>
+
+<div class="faq-item" data-keywords="反审核 删单 删除 前置 必须"><div class="q">Q8: 想删除单据（删单），系统提示不让删怎么办？</div><div class="a"><p>所有单据删除前，必须先在【单据反审核】模块中完成反审核。这是删单的前置条件，缺此步骤系统会阻止删除。</p><p><strong>操作路径：</strong>系统菜单 → 【单据反审核】→ 找到对应单据 → 反审核 → 回到对应模块按顺序删除。</p><p class="note">反审核的逆向顺序参见上方 Q6 的删单顺序表。</p></div></div>
+
+<!-- ====== 三、品牌部（内部） ====== -->
+<h2>三、品牌部（内部）</h2>
+<p style="color:var(--c-muted);margin-bottom:1rem;font-size:.9rem">适用对象：本公司品牌部同事 ｜ 文档：品牌部-查看订单数据手册 ｜ <span class="tag tag-info">注意：以下操作均在联欣系统</span></p>
+
+<div class="faq-item" data-keywords="意向订单 购物车 导出 查看 品牌部"><div class="q">Q1: 怎么看各品牌的意向订单和购物车数据？</div><div class="a"><p>路径：联欣 →「购物车管理」。可按以下方式导出：</p><ul><li><strong>汇总导出</strong>：整体概览</li><li><strong>一维导出</strong>：按订单维度展开</li><li><strong>二维导出</strong>：按店铺+商品维度展开</li></ul></div></div>
+
+<div class="faq-item" data-keywords="确认订单 报表 筛选 导出 订货客户汇总"><div class="q">Q2: 怎么按时间段查询各品牌确认订单？</div><div class="a"><p>路径：联欣 →「订货客户汇总-市场部」→ 筛选时间、品牌 → 订单状态勾选「发货」和「已完成」→ 点击查询导出。</p></div></div>
+
+<div class="faq-item" data-keywords="汇总分析 订单 维度 一级 二级 统计数据"><div class="q">Q3: 订单汇总分析怎么设置维度？</div><div class="a"><p>路径：联欣 →「汇总分析」→ 筛选品牌、时间、订单状态 → 选择一级分析维度（如品牌、时间）和二级分析维度（如客户、地区）→ 点击查询。</p><p>常用维度组合：品牌+客户 / 品牌+月份 / 客户+商品类型。</p></div></div>
+
+<div class="faq-item" data-keywords="按店 导出 每个客户 订单明细 主题订单"><div class="q">Q4: 怎么按店导出各品牌每个客户的订单明细？</div><div class="a"><p>路径：联欣 →「主题订单」→ 筛选品牌、订单状态（发货、已完成）、时间 → 点击查找 → 选择<span class="tag tag-info">二维按店导出</span>。</p></div></div>
+
+<div class="faq-item" data-keywords="商品排行 货品排行 排名 统计 单品"><div class="q">Q5: 怎么查看商品排行和各店铺单品的销售情况？</div><div class="a"><p>路径：联欣 →「货品排行」→ 从货品资料中添加需要的维度（如品牌、时间范围、订单状态等）→ 系统按维度展示各品牌商品销售排名和各店铺单品销售数据。</p></div></div>
+
+<!-- ====== 四、财务部 ====== -->
+<h2>四、财务部</h2>
+<p style="color:var(--c-muted);margin-bottom:1rem;font-size:.9rem">责任人：财务部 ｜ 文档：财务部-康雷系统财务对帐说明 V2</p>
+
+<div class="faq-item" data-keywords="回款单 审核 标准 看什么 付款方式 凭证"><div class="q">Q1: 回款单审核的三个关键检查点是什么？</div><div class="a"><ul><li><strong>付款金额</strong>：与订单金额是否一致</li><li><strong>付款方式</strong>：银行转账/微信/支付宝/余额支付等</li><li><strong>付款凭证截图</strong>：是否清晰完整，与付款方式、金额匹配</li></ul><p class="note">余额全款支付：只做一张余额支付的回款单；余额不足混合支付：一张余额支付回款单 + 一张实际支付回款单。</p></div></div>
+
+<div class="faq-item" data-keywords="余额支付 混合支付 审核 区别 全额"><div class="q">Q2: 余额支付的回款单怎么审核？混合支付怎么处理？</div><div class="a"><table><tr><th>支付情况</th><th>单据组合</th><th>审核要点</th></tr><tr><td>余额全额支付</td><td>1 张余额支付回款单</td><td>余额截图 + 余额账户 + 支付金额</td></tr><tr><td>余额 + 现金混合</td><td>1 张余额抵扣单 + 1 张现金回款单</td><td>两份凭证分别对应余额和现金部分，合计等于订单金额</td></tr></table></div></div>
+
+<div class="faq-item" data-keywords="预付款 应付付款单 区别 品牌 结算 50%"><div class="q">Q3: 预付款和应付付款单有什么区别？各在什么阶段操作？</div><div class="a"><table><tr><th>单据</th><th>金额</th><th>时机</th><th>操作人</th></tr><tr><td>预付款</td><td>采购单金额的 50%（品牌订金）</td><td>期货截单转采购后</td><td>商品部建单 + 财务部付款提交</td></tr><tr><td>应付付款单</td><td>全款云仓 + 全款现货 + 50% 期货尾款</td><td>每月品牌结算时</td><td>商品部建单 + 财务部付款提交</td></tr></table></div></div>
+
+<div class="faq-item" data-keywords="应付核算 月结 步骤 怎么操作 封帐"><div class="q">Q4: 应付核算（月结）怎么操作？</div><div class="a"><ol><li>商品部根据系统发货明细，核对上月发货明细，跟品牌确认结算款后新建应付付款单</li><li>财务部通过「应付核算」功能核对商品部提交的钉钉付款申请：
+  <ul><li>期货/现货费用类型体现为「采购收货单」</li><li>云仓费用类型体现为「仓库出货单」</li><li>运费等体现为「应付费用单」（正数增加应付、负数减少应付）</li><li>期货订金体现为「预付款」</li></ul>
+</li><li>所有单据叠加计算后为本期应付总额</li><li>月结付款后核实无误 → 点击「应付核算」生成本期账单 → 封帐结存</li></ol></div></div>
+
+<div class="faq-item" data-keywords="对不上 数据 不一致 排查 核算 怎么查"><div class="q">Q5: 应付核算数据对不上怎么排查？</div><div class="a"><p>分三条线交叉核对：</p><ol><li><strong>渠道订单报表</strong>：按店铺区域筛选出区域订单进行统计</li><li><strong>收渠道退货单报表</strong>：客户退货、换货有差额的都在此报表体现</li><li><strong>应收费用单</strong>：确认运费/税费是否已正确冲减</li></ol><p class="warn">最大隐患：退换货未经过系统处理（私下操作），这会导致两套数据对不上。</p></div></div>
+
+<div class="faq-item" data-keywords="订单回款跟踪 报表 查看 每个客户 回款"><div class="q">Q6: 怎么查看每个客户的回款情况？</div><div class="a"><p>路径：康雷 → 「订单回款跟踪报表」→ 可按店铺区域筛选 → 选择该区域店铺 → 查看每个客户订单的具体回款明细（回款金额、回款方式、凭证状态）。</p></div></div>
+
+<!-- ====== 报表速查 ====== -->
+<h2>报表速查索引</h2>
+<p style="color:var(--c-muted);margin-bottom:1rem;font-size:.9rem">以下报表均来自培训文档，按"你想查什么"定位对应报表</p>
+
+<h3 style="color:var(--c-primary);margin-top:1.5rem;">康雷系统（市场部 / 商品部 / 财务部 / 品牌方）</h3>
+<table class="glossary-table">
+<tr><th style="width:25%">我想查...</th><th style="width:25%">去哪个报表</th><th style="width:30%">能看什么</th><th style="width:20%">谁常用</th></tr>
+<tr><td>订单数据</td><td>渠道订单报表</td><td>按店铺区域筛选订单，统计销售数据</td><td><span class="tag tag-info">市场部</span> <span class="tag tag-ok">财务部</span></td></tr>
+<tr><td>客户退换货情况</td><td>收渠道退货单报表</td><td>退货、换货有差额的记录都在这里</td><td><span class="tag tag-info">市场部</span> <span class="tag tag-ok">财务部</span></td></tr>
+<tr><td>客户有没有回款</td><td>订单回款跟踪报表</td><td>每个客户订单的具体回款金额、方式、凭证状态</td><td><span class="tag tag-info">市场部</span> <span class="tag tag-ok">财务部</span></td></tr>
+<tr><td>月结对账</td><td>应付核算</td><td>核对钉钉付款申请，生成本期账单并封帐结存</td><td><span class="tag tag-ok">财务部</span></td></tr>
+<tr><td>发给品牌方的采购任务</td><td>采购单报表</td><td>查看/导出具体采购明细</td><td><span class="tag tag-warn">品牌方</span></td></tr>
+<tr><td>品牌库存情况</td><td>仓库库存报表</td><td>查本品牌的库存数据</td><td><span class="tag tag-warn">品牌方</span></td></tr>
+<tr><td>品牌发了多少货</td><td>仓库出货单报表</td><td>本品牌给客户发的货品明细（历史发货记录）</td><td><span class="tag tag-warn">品牌方</span></td></tr>
+<tr><td>发货有没有差异</td><td>配出差异报表</td><td>YUAN 出货指令 vs 品牌实际发货数量的差异</td><td><span class="tag tag-warn">品牌方</span></td></tr>
+</table>
+
+<h3 style="color:var(--c-primary);margin-top:1.5rem;">联欣系统（品牌部内部）</h3>
+<table class="glossary-table">
+<tr><th style="width:25%">我想查...</th><th style="width:25%">去哪个功能</th><th style="width:30%">能看什么</th><th style="width:20%">导出方式</th></tr>
+<tr><td>各品牌意向订单</td><td>购物车管理</td><td>客户加购但未下单的商品数据</td><td>汇总 / 一维 / 二维导出</td></tr>
+<tr><td>各品牌确认订单</td><td>订货客户汇总</td><td>按时间、品牌筛选已确认订单</td><td>筛选后导出</td></tr>
+<tr><td>订单综合分析</td><td>汇总分析</td><td>按品牌+客户/月份等多维度交叉分析</td><td>选择维度后查询</td></tr>
+<tr><td>每个客户的订单明细</td><td>主题订单</td><td>各品牌每个客户的订单详情</td><td><span class="tag tag-info">二维按店导出</span></td></tr>
+<tr><td>哪个款式卖得好</td><td>货品排行</td><td>各品牌商品销售排名和单品销量</td><td>添加维度后查看</td></tr>
+</table>
+
+<div class="footer">
+  <p>内部 FAQ 知识库 · 基于市场部、商品部、品牌部、财务部操作手册整理</p>
+  <p style="margin-top:.3rem">最后更新 2026-05-16 · 黄文君 · IT 技术</p>
+</div>
+
+</div>
+
+<script>
+// 展开/折叠
+document.querySelectorAll('.faq-item .q').forEach(function(q){
+  q.addEventListener('click',function(){this.parentElement.classList.toggle('open')});
+});
+// 搜索
+(function(){
+  var input=document.getElementById('search'),items=document.querySelectorAll('.faq-item'),info=document.getElementById('info'),h2s=document.querySelectorAll('h2');
+  input.addEventListener('input',function(){
+    var s=this.value.trim().toLowerCase(),n=0;
+    h2s.forEach(function(h){h.style.display=''});
+    items.forEach(function(it){
+      var kw=(it.dataset.keywords||'')+' '+it.textContent.toLowerCase();
+      if(!s||kw.indexOf(s)!==-1){it.style.display='';n++}
+      else{it.style.display='none'}
+    });
+    if(s){
+      var prev=null;
+      h2s.forEach(function(h){if(h.style.display==='')prev=h});
+      items.forEach(function(it){
+        if(it.style.display!=='')return;
+        var sec=it.previousElementSibling;
+        while(sec&&sec.tagName!=='H2')sec=sec.previousElementSibling||sec.parentElement.previousElementSibling;
+      });
+      h2s.forEach(function(h){
+        var next=h.nextElementSibling,found=false;
+        while(next&&next.tagName!=='H2'){if(next.style&&next.style.display!=='none'){found=true;break}next=next.nextElementSibling}
+        h.style.display=found?'':'none';
+      });
+    }
+    info.textContent=s?'匹配 '+n+' 条结果':'共 '+items.length+' 条问答';
+  });
+})();
+</script>
+</body>
+</html>

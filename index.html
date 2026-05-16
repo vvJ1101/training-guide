@@ -1,289 +1,42 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>市场部联欣与康雷系统操作流程</title>
-  <link rel="stylesheet" href="css/style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>市场部培训系统</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif;background:#f0f4f8;color:#1e293b;min-height:100vh;display:flex;align-items:center;justify-content:center}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1.5rem;max-width:900px;padding:2rem}
+.card{background:#fff;border-radius:12px;padding:2rem;text-align:center;box-shadow:0 2px 16px rgba(0,0,0,0.06);transition:box-shadow .2s,transform .2s;text-decoration:none;color:inherit}
+.card:hover{box-shadow:0 6px 24px rgba(0,0,0,0.1);transform:translateY(-2px)}
+.card .icon{font-size:2.5rem;margin-bottom:1rem}
+.card h2{font-size:1.2rem;margin-bottom:.5rem;color:#1e3a6f}
+.card p{color:#64748b;font-size:.9rem;line-height:1.5}
+.footer{text-align:center;color:#94a3b8;margin-top:.5rem;font-size:.85rem;position:fixed;bottom:1.5rem}
+</style>
 </head>
 <body>
-<div class="container">
-  <h1>市场部联欣与康雷系统操作流程</h1>
-
-  <!-- 目录导航 -->
-  <div class="toc">
-    <h3>📑 目录</h3>
-    <ol>
-      <li><a href="#sec1">联欣系统：订单审核</a></li>
-      <li><a href="#sec2">康雷系统总流程</a></li>
-      <li><a href="#sec3">云仓、现货、期货订单操作对比</a></li>
-      <li><a href="#sec4">云仓订单操作流程</a></li>
-      <li><a href="#sec5">现货订单操作流程</a></li>
-      <li><a href="#sec6">期货订单操作流程</a></li>
-      <li><a href="#sec7">客户退换货处理</a></li>
-      <li><a href="#sec8">单据取消处理</a></li>
-    </ol>
-  </div>
-
-  <!-- 搜索框 -->
-  <div class="search-box">
-    <input type="text" id="searchInput" placeholder="🔍 搜索操作步骤…">
-    <div class="search-result-count" id="searchCount"></div>
-  </div>
-
-  <!-- 术语对照表 -->
-  <div class="note-box" style="display:block; margin-bottom:2rem;">
-    <strong>📖 常用术语说明（新人先看这里）</strong>
-    <table style="margin:0.8rem 0 0;">
-      <tr><th style="width:140px;">术语</th><th>说明</th></tr>
-      <tr><td>回款单</td><td>客户付款后在康雷制作的收款单据，需上传付款凭证并提交审核（<strong>云仓类型由提交人自行审核</strong>，现货/期货提交财务审核）</td></tr>
-      <tr><td>订金收入单</td><td>期货场景下，收取客户订金或整单尾款时制作的单据</td></tr>
-      <tr><td>出货指令单</td><td>提交后品牌方可见并发货的单据，云仓由市场部提交，现货/期货由商品部提交</td></tr>
-      <tr><td>渠道订单</td><td>联欣审核通过后同步至康雷生成的订单，是后续所有操作的基础</td></tr>
-      <tr><td>余额转入</td><td>使用客户品牌余额账户中的余额来抵扣货款的操作</td></tr>
-      <tr><td>转回款</td><td>期货部分尾款支付时，将订金收入单转为回款单进行处理的操作</td></tr>
-      <tr><td>余额充值</td><td>客户向品牌余额账户充值，用于后续支付订单</td></tr>
-      <tr><td>应收费用单</td><td>冲减运费、税费的单据，确保回款金额与订单金额一致，避免多余款项自动转入余额</td></tr>
-      <tr><td>应收余额转账单</td><td>使用余额支付时系统生成的转账凭证，<strong>云仓类型由提交人自行审核</strong>，其他类型提交财务审核</td></tr>
-    </table>
-  </div>
-
-  <!-- 1. 联欣系统：订单审核 -->
-  <h2 id="sec1">1. 联欣系统：订单审核</h2>
-  <p><strong>责任人：市场部</strong></p>
-  <ul>
-    <li>根据主题、店铺等条件筛选订单，核对订单主题类型，正确设置标签（<strong>严禁云仓主体与期货/现货标签混淆</strong>）。</li>
-    <li>确认商品清单、订货折扣、收货人信息、订单比例，执行<strong>商品审核</strong>。</li>
-    <li>审核通过的订单自动同步至康雷 ERP 系统：
-      <ul>
-        <li><strong>云仓订单</strong>：由市场部客户经理直接提交发货指令，提交后品牌即可看到发货任务并发货。</li>
-        <li><strong>现货/期货订单</strong>：需在限定时日截单后，由商品部操作提交发货指令。</li>
-      </ul>
-    </li>
-  </ul>
-  <img src="images/order-review.jpg" alt="联欣订单审核界面" class="screenshot-img" loading="lazy">
-  <p class="caption">▲ 联欣订单审核界面</p>
-  
-  <img src="images/order-detail.jpg" alt="订单详情界面" class="screenshot-img" loading="lazy">
-  <p class="caption">▲ 订单详情界面</p>
-
-  <!-- 2. 康雷系统总流程 -->
-  <h2 id="sec2">2. 康雷系统总流程</h2>
-  <p><strong>流程方向：</strong>联欣审核通过 → 同步至康雷生成渠道订单与出货指令。云仓由市场部做回款并直接转发货；现货/期货经商品部截单转采购后，市场部负责回款，商品部负责转发货。</p>
-  <img src="images/overall-flow.jpg" alt="总体流程示意图" class="screenshot-img" loading="lazy">
-  <p class="caption">▲ 总体流程示意图</p>
-  <img src="images/document-flow.jpg" alt="单据流程图" class="screenshot-img" loading="lazy">
-  <p class="caption">▲ 单据流程图</p>
-
-  <!-- 3. 订单类型对比表格 -->
-  <h2 id="sec3">3. 云仓、现货、期货订单操作对比</h2>
-  <table>
-    <thead>
-      <tr>
-        <th>对比维度</th><th>云仓</th><th>现货</th><th>期货</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td>订单审核后</td>
-        <td>同步至康雷，生成渠道订单与出货指令单</td>
-        <td>同步至康雷，等待商品部截单</td>
-        <td>同步至康雷，等待商品部截单转采购</td>
-      </tr>
-      <tr>
-        <td>发货指令提交人</td>
-        <td><strong>市场部</strong>（确认回款后直接提交）</td>
-        <td><strong>商品部</strong>（截单转采购后统一提交）</td>
-        <td><strong>商品部</strong>（收到尾款且财务审核通过后提交）</td>
-      </tr>
-      <tr>
-        <td>市场部回款操作</td>
-        <td>对自动生成的<strong>回款单</strong>进行编辑、上传凭证、<strong>提交自行审核</strong></td>
-        <td>对自动生成的<strong>回款单</strong>进行编辑、上传凭证、提交财务审核</td>
-        <td>收到订金时编辑<strong>订金收入单</strong>；收到尾款时操作<strong>转回款</strong>（全额一次，多次分笔）</td>
-      </tr>
-      <tr>
-        <td>市场部核心职责</td>
-        <td>检查渠道订单 → 做回款单 → 提交出货指令单</td>
-        <td>仅做回款单，不接触发货指令</td>
-        <td>管理订金与尾款回款，涉及余额转入/混合支付/余额充值</td>
-      </tr>
-      <tr>
-        <td>常见特殊操作</td>
-        <td>订单取消需删除全部三个单据</td><td>—</td>
-        <td>使用余额支付、余额不足混合支付、余额充值</td>
-      </tr>
-      <tr>
-        <td>关键提醒</td>
-        <td>回款单信息填写不规范将影响发货时效</td>
-        <td>市场部无需操作转发货</td>
-        <td>严禁私自沟通退换货，尾款收齐后由商品部转发货</td>
-      </tr>
-    </tbody>
-  </table>
-
-  <!-- 4. 云仓订单操作流程 -->
-  <h2 id="sec4">4. 云仓订单操作流程</h2>
-  <p><strong>责任人：市场部</strong></p>
-  <div style="background:#e8f5e9; border-left:6px solid #16a34a; padding:0.8rem 1.2rem; border-radius:0 6px 6px 0; margin:1rem 0;">
-    <strong>⚡ 云仓 3 步走：</strong>① 检查渠道订单 → ② 回款登记 → ③ 提交出货指令单
-  </div>
-  <ol>
-    <li>
-      <strong>检查渠道订单</strong>：确认订单信息无误。
-      <img src="images/channel-order-check.jpg" alt="渠道订单检查界面" class="screenshot-img" loading="lazy">
-      <p class="caption">▲ 渠道订单检查界面</p>
-    </li>
-    <li>
-      <strong>回款登记</strong>：
-      <p>在康雷找到对应回款单，编辑并上传付款凭证、备注后保存，<strong>提交给自己账号审核</strong>（云仓类型由提交人自行审核，无需财务介入）。</p>
-      <p><strong>必填/必上传项：</strong></p>
-      <table>
-        <thead><tr><th>项目</th><th>说明</th></tr></thead>
-        <tbody>
-          <tr><td>客户付款方式</td><td>如银行转账、微信、支付宝等</td></tr>
-          <tr><td>收款金额</td><td>实际收到的款项金额</td></tr>
-          <tr><td>付款凭证</td><td>截图或电子回单，必须清晰完整</td></tr>
-        </tbody>
-      </table>
-      <div class="highlight-box">
-        <span>以上信息填写不规范将影响发货时效，请务必仔细核对。</span>
-      </div>
-      <img src="images/payment-form.jpg" alt="回款单填写示例" class="screenshot-img" loading="lazy">
-      <p class="caption">▲ 回款单填写示例</p>
-      <div class="highlight-box" style="display:block;">
-        <strong>含运费/税费时需做应收费用单冲减</strong>
-        <p style="margin-top:0.5rem;">回款金额须与订单金额一致，若回款包含了运费或税费，多余部分会自动转入客户余额。因此回款登记后，需在对应渠道订单下制作<strong>应收费用单</strong>冲减运费、税费，确保回款金额与订单金额一致：</p>
-        <ul style="margin:0.5rem 0 0 1.5rem;">
-          <li>进入康雷对应<strong>渠道订单</strong>界面，点击【增加费用】</li>
-          <li>制作<strong>应收费用单</strong>，填写费用类型（运费/税费）、金额</li>
-          <li>保存后回款金额即与订单金额匹配</li>
-        </ul>
-        <img src="images/expense-order.png" alt="应收费用单操作" class="screenshot-img" loading="lazy">
-        <p class="caption">▲ 渠道订单界面 - 增加费用操作</p>
-      </div>
-    </li>
-    <li>
-      <strong>提交出货指令单</strong>：审核通过后，核对出货指令单中的地址等信息，确认无误后提交，品牌即可发货。
-      <img src="images/shipping-instruction.jpg" alt="出货指令单提交" class="screenshot-img" loading="lazy">
-      <p class="caption">▲ 出货指令单提交</p>
-    </li>
-  </ol>
-  <div class="note-box">
-    <span>云仓订单如需客户先充值再通过余额支付，参见 <a href="#sec6-4">6.4 余额充值</a> 操作。</span>
-  </div>
-
-  <!-- 5. 现货订单操作流程 -->
-  <h2 id="sec5">5. 现货订单操作流程</h2>
-  <p><strong>责任人：市场部（回款环节）</strong></p>
-  <div style="background:#e8f5e9; border-left:6px solid #16a34a; padding:0.8rem 1.2rem; border-radius:0 6px 6px 0; margin:1rem 0;">
-    <strong>⚡ 现货 1 步走：</strong>仅做回款登记，发货由商品部负责
-  </div>
-  <p><strong>现货完整链路：</strong>联欣审核通过 → 同步至康雷 → 商品部在截单日统一截单并转采购 → <strong>市场部做回款登记</strong> → 商品部提交出货指令 → 品牌发货</p>
-  <p><strong>市场部职责：</strong>仅进行回款登记，<strong>无需操作转发货</strong>。</p>
-  <h3>5.1 回款登记操作</h3>
-  <p>操作步骤与云仓回款登记完全一致，参照 <a href="#sec4">第4节 云仓回款登记</a> 操作即可。</p>
-  <img src="images/spot-payment.jpg" alt="现货回款单编辑界面" class="screenshot-img" loading="lazy">
-  <p class="caption">▲ 现货回款单编辑界面</p>
-  <div class="note-box">
-    <span>现货订单如需客户先充值再通过余额支付，参见 <a href="#sec6-4">6.4 余额充值</a> 操作。</span>
-  </div>
-
-  <!-- 6. 期货订单操作流程 -->
-  <h2 id="sec6">6. 期货订单操作流程</h2>
-  <p><strong>责任人：市场部（回款环节）</strong></p>
-  <div style="background:#e8f5e9; border-left:6px solid #16a34a; padding:0.8rem 1.2rem; border-radius:0 6px 6px 0; margin:1rem 0;">
-    <strong>⚡ 期货 4 步走：</strong>① 订金处理 → ② 尾款/余额支付 → ③ 余额充值（如需） → ④ 商品部转发货
-  </div>
-  <p>商品部在截单日统一截单并转采购；品牌生产完毕且客户尾款收齐时，市场部操作回款，商品部再转发货并提交出货指令单。</p>
-
-  <h3>6.1 期货订金处理</h3>
-  <ul>
-    <li>通过渠道订单号查找到对应的订金收入单号，点击编辑，选择付款方式，保存并提交。</li>
-  </ul>
-  <img src="images/deposit-income.jpg" alt="订金收入单编辑" class="screenshot-img" loading="lazy">
-  <p class="caption">▲ 期货订金处理 - 订金收入单编辑</p>
-
-  <h3>6.2 尾款处理</h3>
-  <p>无论整单尾款还是部分尾款，统一使用<strong>转回款</strong>操作：</p>
-  <ul>
-    <li>找到对应订单，点击<strong>转回款</strong>，选择客户付款方式、填写收款金额、备注，上传付款凭证后提交。</li>
-    <li><strong>全额回款</strong>：点击一次转回款即可。</li>
-    <li><strong>多次回款</strong>：每次收到款项时分别点击转回款、上传对应凭证。</li>
-  </ul>
-  <img src="images/transfer-repayment.jpg" alt="转回款操作界面" class="screenshot-img" loading="lazy">
-  <p class="caption">▲ 尾款处理 - 转回款操作界面</p>
-
-  <h3>6.3 使用余额支付</h3>
-  <ul>
-    <li><strong>余额充足（整单使用余额）</strong>：勾选对应渠道订单，点击【余额转入】→ 选择客户余额账号（注意品牌余额区分）→ 输入余额支付额度 → 上传余额使用截图 → 保存提交。
-      <img src="images/balance-transfer-full.jpg" alt="整单余额转入操作" class="screenshot-img" loading="lazy">
-      <p class="caption">▲ 整单余额转入操作示例</p>
-    </li>
-    <li><strong>余额不足（混合支付）</strong>：余额部分做【余额转入】抵扣单，现金支付部分做回款单（即一张回款单 + 一张余额转账单）。</li>
-  </ul>
-  <img src="images/balance-transfer.jpg" alt="余额转入界面" class="screenshot-img" loading="lazy">
-  <p class="caption">▲ 使用余额支付 - 余额转入界面</p>
-
-  <h3 id="sec6-4">6.4 余额充值</h3>
-  <div class="note-box">
-    <span><strong>适用说明：</strong>余额充值是一个通用操作，不限于期货场景。现货或云仓订单如需客户先充值再支付，操作方式完全相同。</span>
-  </div>
-  <ul>
-    <li>新建回款单，选择对应的客户品牌余额账号（例如：YEE SILS089 余额对应 YEE S 品牌），填写支付方式、充值金额、上传凭证，保存并提交财务审核。</li>
-  </ul>
-  <div class="note-box">
-    <span><strong>注意：</strong>余额账号必须与品牌严格对应，例如 YEE SILS089 属于 YEE S 品牌余额，不可错选其他品牌账号。</span>
-  </div>
-  <img src="images/balance-recharge.jpg" alt="余额充值操作界面" class="screenshot-img" loading="lazy">
-  <p class="caption">▲ 余额充值操作界面</p>
-
-  <!-- 7. 客户退换货处理 -->
-  <h2 id="sec7">7. 客户退换货处理</h2>
-  <div class="highlight-box">
-    <span><strong>严禁市场部私自与品牌沟通退换货，所有退换货必须经系统处理，否则将导致商品部与财务部月结核算数据不准确。</strong></span>
-  </div>
-
-  <h3>7.1 退换货判断流程</h3>
-  <div class="flow-text">
-    客户提出退换货
-        │
-        ├─ 换同等金额款式 ──→ 线下联系商品部换货，无需系统操作
-        │
-        └─ 换款后存在差额 ──→ 市场部在联欣重新下单，商品部在康雷做退货处理
-  </div>
-  <img src="images/return-exchange.png" alt="退换货处理操作" class="screenshot-img" loading="lazy">
-  <p class="caption">▲ 客户退换货处理示例</p>
-
-  <!-- 8. 单据取消处理 -->
-  <h2 id="sec8">8. 单据取消处理</h2>
-  <p><strong>适用范围：</strong>云仓订单取消、使用余额支付的订单取消等场景均适用。</p>
-  <div class="highlight-box">
-    <span><strong>通用原则：</strong>无论是否已发货，所有订单取消均需商品部在系统中做退货处理，市场部须联系商品部执行。</span>
-  </div>
-  <ul>
-    <li>
-      <strong>云仓未发货取消</strong>：
-      <ul>
-        <li>客户款项需退还：删除康雷生成的三张单据——【出货指令单】【回款单】【渠道订单】。</li>
-        <li>客户款项转入售后款：仅删除【出货指令单】，并通知商品部将对应订单标记为完成。</li>
-      </ul>
-      <img src="images/cloud-cancel.png" alt="云仓未发货取消操作" class="screenshot-img" loading="lazy">
-      <p class="caption">▲ 云仓未发货取消操作示例</p>
-    </li>
-    <li>
-      <strong>使用余额支付的订单取消</strong>：删除【出货指令单】【渠道订单】，然后删除对应订单的回款单和退款单（通过<strong>应收余额转账单号</strong>来查找关联的回款单与退款单）。
-      <img src="images/balance-order-cancel.png" alt="使用余额支付订单取消操作" class="screenshot-img" loading="lazy">
-      <p class="caption">▲ 使用余额支付的订单取消操作示例</p>
-    </li>
-  </ul>
-
-  <div class="footer">
-    市场部内部培训专用 · 请以最新系统实际界面为准<br>
-    <button class="print-btn" onclick="window.print()">🖨️ 打印 / 导出PDF</button>
-	    <a href="exam.html" class="print-btn" style="text-decoration:none;margin-left:0.5rem;">📝 进入考核系统</a>
-  </div>
+<div style="text-align:center;">
+<h1 style="font-size:1.6rem;color:#1e3a6f;margin-bottom:2rem;">市场部系统操作培训</h1>
+<div class="grid">
+  <a href="training/" class="card">
+    <div class="icon">📖</div>
+    <h2>培训文档</h2>
+    <p>联欣与康雷系统操作流程<br>术语表 · 流程图 · 操作对比</p>
+  </a>
+  <a href="exam/" class="card">
+    <div class="icon">📝</div>
+    <h2>考核系统</h2>
+    <p>实操截图考核<br>答题者上传 · 考核官审核 · 成绩单</p>
+  </a>
+  <a href="faq/" class="card">
+    <div class="icon">💡</div>
+    <h2>FAQ 知识库</h2>
+    <p>4 部门常见问题速查<br>市场部 · 商品部 · 品牌部 · 财务部</p>
+  </a>
 </div>
-  <script src="js/main.js"></script>
+<div class="footer">市场部内部培训系统 · 黄文君</div>
+</div>
 </body>
 </html>
