@@ -503,7 +503,7 @@
             ${urls.length < MAX_IMAGES_PER_NODE ? `
               <button class="uploadBtn" data-node="${n.id}">📷 上传截图</button>
               <button class="cameraBtn" data-node="${n.id}" style="background:#16a34a;">📸 拍照</button>
-              <button class="pasteBtn" data-node="${n.id}" style="background:#6d28d9;">📋 粘贴截图</button>
+              <button class="pasteBtn" data-node="${n.id}" style="background:#6d28d9;">📋 粘贴 (Ctrl+V)</button>
             ` : ''}
             <input type="file" accept="image/*" id="file-${n.id}" style="display:none;" multiple>
             <input type="file" accept="image/*" capture="environment" id="camera-${n.id}" style="display:none;">
@@ -526,41 +526,132 @@
       document.querySelectorAll('.cameraBtn').forEach(b => {
         b.addEventListener('click', function(){ document.getElementById('camera-'+this.dataset.node).click(); });
       });
-      // 粘贴截图
-      document.querySelectorAll('.pasteBtn').forEach(b => {
-        b.addEventListener('click', async function(){
-          const nodeId = this.dataset.node;
-          try {
-            const items = await navigator.clipboard.read();
-            let pasted = 0;
-            for (const item of items) {
-              if (!item.types.includes('image/png') && !item.types.includes('image/jpeg')) continue;
-              if (pasted >= MAX_IMAGES_PER_NODE) break;
-              const blob = await item.getType(item.types.find(t => t.startsWith('image/')));
-              const dataURL = await new Promise(resolve => {
-                const reader = new FileReader();
-                reader.onload = e => resolve(e.target.result);
-                reader.readAsDataURL(blob);
-              });
-              const current = ss[nodeId] || [];
-              if (current.length >= MAX_IMAGES_PER_NODE) break;
-              current.push(dataURL);
-              ss[nodeId] = current;
-              await saveNodeImgs(exam.taskId, nodeId, current);
-              pasted++;
-            }
-            if (pasted > 0) {
-              updateImgList(nodeId, ss[nodeId]);
-              renderProgress();
-              toast(`已粘贴 ${pasted} 张截图`);
-            } else {
-              toast('剪贴板中没有图片，请先用截图工具（如微信/QQ截图）复制图片');
-            }
-          } catch(e) {
-            toast('粘贴失败，请确认已复制图片到剪贴板');
-          }
+      // 粘贴截图（按钮点击 + Ctrl+V 键盘 + 右键粘贴）
+      let currentPasteNode = nodes.length > 0 ? nodes[0].id : null;
+
+      // 点击卡片任意位置 → 设为当前粘贴目标
+      document.querySelectorAll('.card').forEach(card => {
+        card.addEventListener('click', function(e) {
+          if (e.target.closest('button') || e.target.closest('img')) return;
+          const nodeId = this.id.replace('card-', '');
+          if (nodeId) currentPasteNode = nodeId;
         });
       });
+
+      document.querySelectorAll('.pasteBtn').forEach(b => {
+        b.addEventListener('click', async function(){
+          currentPasteNode = this.dataset.node;
+          await doClipboardPaste(this.dataset.node);
+        });
+      });
+
+      // Ctrl+V / Cmd+V 键盘粘贴
+      document.addEventListener('keydown', function(e) {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
+          // 不阻止默认行为，让 paste 事件自然触发
+        }
+      });
+
+      document.addEventListener('paste', async function(e) {
+        // 检查焦点是否在 input/textarea 中（不拦截文本粘贴）
+        const activeEl = document.activeElement;
+        if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) return;
+
+        const items = e.clipboardData ? e.clipboardData.items : [];
+        const imageItems = [];
+        for (let i = 0; i < items.length; i++) {
+          if (items[i].type.startsWith('image/')) imageItems.push(items[i].getAsFile());
+        }
+        if (imageItems.length === 0) return;
+
+        e.preventDefault();
+        const targetNode = currentPasteNode || nodes[0].id;
+        const current = ss[targetNode] || [];
+        if (current.length >= MAX_IMAGES_PER_NODE) {
+          toast('该节点已达上传上限');
+          return;
+        }
+        const btn = document.querySelector(`.pasteBtn[data-node="${targetNode}"]`);
+        setLoading(btn, true);
+        let pasted = 0;
+        for (const file of imageItems) {
+          if (current.length + pasted >= MAX_IMAGES_PER_NODE) break;
+          const dataURL = await compressImage(file);
+          current.push(dataURL);
+          pasted++;
+        }
+        ss[targetNode] = current;
+        await saveNodeImgs(exam.taskId, targetNode, current);
+        updateImgList(targetNode, current);
+        renderProgress();
+        setLoading(btn, false);
+        if (pasted > 0) toast(`Ctrl+V 已粘贴 ${pasted} 张到当前节点`);
+      });
+
+      // 右键菜单粘贴
+      document.querySelectorAll('.card').forEach(card => {
+        card.addEventListener('contextmenu', function(e) {
+          const nodeId = this.id.replace('card-', '');
+          if (!nodeId) return;
+          currentPasteNode = nodeId;
+          const current = ss[nodeId] || [];
+          if (current.length >= MAX_IMAGES_PER_NODE) return;
+          e.preventDefault();
+          const menu = document.createElement('div');
+          menu.style.cssText = 'position:fixed;z-index:99999;background:#fff;border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,0.15);padding:0.5rem 0;min-width:180px;';
+          menu.style.left = e.clientX + 'px';
+          menu.style.top = e.clientY + 'px';
+          menu.innerHTML = `
+            <div class="ctx-item" data-action="paste" style="padding:0.6rem 1rem;cursor:pointer;font-size:0.95rem;">📋 粘贴截图</div>
+            <div class="ctx-item" data-action="upload" style="padding:0.6rem 1rem;cursor:pointer;font-size:0.95rem;">📷 上传截图</div>
+            <div class="ctx-item" data-action="camera" style="padding:0.6rem 1rem;cursor:pointer;font-size:0.95rem;">📸 拍照</div>
+          `;
+          document.body.appendChild(menu);
+          const closeMenu = () => { if (menu.parentNode) menu.remove(); };
+          menu.querySelectorAll('.ctx-item').forEach(item => {
+            item.addEventListener('mouseenter', () => item.style.background = '#f0f4ff');
+            item.addEventListener('mouseleave', () => item.style.background = '');
+            item.addEventListener('click', async () => {
+              closeMenu();
+              const action = item.dataset.action;
+              if (action === 'paste') await doClipboardPaste(nodeId);
+              else if (action === 'upload') document.getElementById('file-' + nodeId).click();
+              else if (action === 'camera') document.getElementById('camera-' + nodeId).click();
+            });
+          });
+          document.addEventListener('click', closeMenu, { once: true });
+        });
+      });
+
+      async function doClipboardPaste(nodeId) {
+        try {
+          const items = await navigator.clipboard.read();
+          const current = ss[nodeId] || [];
+          if (current.length >= MAX_IMAGES_PER_NODE) { toast('该节点已达上传上限'); return; }
+          let pasted = 0;
+          for (const item of items) {
+            if (!item.types.some(t => t.startsWith('image/'))) continue;
+            if (pasted + current.length >= MAX_IMAGES_PER_NODE) break;
+            const blob = await item.getType(item.types.find(t => t.startsWith('image/')));
+            const dataURL = await new Promise(resolve => {
+              const reader = new FileReader();
+              reader.onload = e => resolve(e.target.result);
+              reader.readAsDataURL(blob);
+            });
+            current.push(dataURL);
+            ss[nodeId] = current;
+            await saveNodeImgs(exam.taskId, nodeId, current);
+            pasted++;
+          }
+          if (pasted > 0) {
+            updateImgList(nodeId, ss[nodeId]);
+            renderProgress();
+            toast(`已粘贴 ${pasted} 张截图`);
+          } else {
+            toast('剪贴板中没有图片，请先用截图工具复制');
+          }
+        } catch(e) { toast('粘贴失败，请确认已复制图片到剪贴板'); }
+      }
       // 文件上传
       document.querySelectorAll('input[type=file]').forEach(input => {
         input.addEventListener('change', async function(e) {
