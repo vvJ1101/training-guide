@@ -22,7 +22,7 @@
     cloud: [
       { id:'checkOrder', name:'检查渠道订单', guide:'渠道订单检查界面，需清晰显示订单号、客户名称、商品信息' },
       { id:'payment', name:'回款登记', guide:'回款单填写界面，需包含付款方式、收款金额、上传的付款凭证' },
-      { id:'ship', name:'提交出货指令单', guide:'出货指令单提交界面，需显示收货地址、发货状态' }
+      { id:'ship', name:'提交出货指令单', guide:'显示已提交的指令单即可' }
     ],
     spot: [
       { id:'spotPayment', name:'回款登记', guide:'现货回款单编辑界面，需包含付款方式、收款金额、付款凭证' }
@@ -259,16 +259,18 @@
   function renderLogin() {
     currentUser = null;
     localStorage.removeItem('loginData');
+    const sharedPwd = getStore('sharedExamPassword', '');
     app.innerHTML = `
-      <h1>市场部系统操作考核 v2.6</h1>
+      <h1>市场部系统操作考核 v3.0</h1>
       <div style="max-width:400px;margin:2rem auto;">
-        <div class="form-group"><label>角色</label><select id="roleSelect"><option value="">-- 请选择 --</option><option value="examiner">考核官</option><option value="candidate">答题者</option></select></div>
+        <div class="form-group"><label>角色</label><select id="roleSelect"><option value="examiner">考核官</option><option value="candidate" selected>答题者</option></select></div>
         <div class="form-group"><label>用户名（工号或姓名）</label><input type="text" id="usernameInput" placeholder="工号或姓名"></div>
-        <div id="pwdGroup" class="form-group hidden">
-          <label>管理员密码</label>
+        <div class="form-group">
+          <label id="pwdLabel">考核密码</label>
           <div style="display:flex;gap:0.4rem;">
             <input type="password" id="passwordInput" style="flex:1;">
             <button id="pwdToggleBtn" type="button" style="padding:0.6rem 0.8rem;flex-shrink:0;font-size:0.9rem;" tabindex="-1">👁</button>
+          ${!sharedPwd ? '<span style="color:#94a3b8;font-size:0.8rem;">管理员未设考核密码时可任意登录</span>' : ''}
           </div>
         </div>
         <button id="loginBtn" class="success" style="width:100%;">登录</button>
@@ -279,15 +281,13 @@
 
     document.getElementById('roleSelect').addEventListener('change', function(){
       const isExaminer = this.value === 'examiner';
-      document.getElementById('pwdGroup').classList.toggle('hidden', !isExaminer);
-      if (isExaminer) setTimeout(() => document.getElementById('passwordInput').focus(), 100);
+      document.getElementById('pwdLabel').textContent = isExaminer ? '管理员密码' : '考核密码';
     });
 
     document.getElementById('pwdToggleBtn').addEventListener('click', function(){
       const input = document.getElementById('passwordInput');
-      const isPwd = input.type === 'password';
-      input.type = isPwd ? 'text' : 'password';
-      this.textContent = isPwd ? '🙈' : '👁';
+      input.type = input.type === 'password' ? 'text' : 'password';
+      this.textContent = input.type === 'password' ? '👁' : '🙈';
     });
 
     function onEnter(e) { if (e.key === 'Enter') document.getElementById('loginBtn').click(); }
@@ -297,15 +297,17 @@
     document.getElementById('loginBtn').addEventListener('click', async function(){
       const role = document.getElementById('roleSelect').value;
       const username = document.getElementById('usernameInput').value.trim();
+      const pwd = document.getElementById('passwordInput').value;
       if (!role || !username) return toast('请填写完整');
       setLoading(this, true);
       if (role === 'examiner') {
-        const pwd = document.getElementById('passwordInput').value;
         if (hashStr(pwd) !== ADMIN_PASSWORD_HASH) { setLoading(this, false); return toast('密码错误'); }
         currentUser = { role, username };
         saveLogin();
         renderExaminerDashboard();
       } else {
+        const sp = getStore('sharedExamPassword', '');
+        if (sp && pwd !== sp) { setLoading(this, false); return toast('考核密码错误'); }
         currentUser = { role, username };
         saveLogin();
         renderCandidateDashboard();
@@ -650,7 +652,7 @@
           } else {
             toast('剪贴板中没有图片，请先用截图工具复制');
           }
-        } catch(e) { toast('粘贴失败，请确认已复制图片到剪贴板'); }
+        } catch(e) { toast('粘贴失败，请用 Ctrl+V 快捷键粘贴'); }
       }
       // 文件上传
       document.querySelectorAll('input[type=file]').forEach(input => {
@@ -748,6 +750,7 @@
         <button id="templateBtn">📋 模板管理</button>
         <button id="backupBtn">💾 数据备份</button>
         <button id="restoreBtn">📥 导入数据</button>
+        <button id="settingsBtn" style="background:#64748b;">⚙️ 设置</button>
         <button id="logoutBtn" class="secondary">退出</button>
       </div>
       <div class="form-row no-print" style="margin-top:1rem;">
@@ -775,6 +778,7 @@
     document.getElementById('logoutBtn').addEventListener('click', ()=>{ currentUser=null; renderLogin(); });
     document.getElementById('backupBtn').addEventListener('click', exportData);
     document.getElementById('restoreBtn').addEventListener('click', ()=>importData().then(()=>renderExaminerDashboard()));
+    document.getElementById('settingsBtn').addEventListener('click', renderSettings);
     document.querySelectorAll('.viewBtn').forEach(b=>b.addEventListener('click', ()=>showExamDetail(b.dataset.id)));
     document.querySelectorAll('.reviewBtn').forEach(b=>b.addEventListener('click', ()=>renderReview(b.dataset.id)));
     document.querySelectorAll('.reportBtn').forEach(b=>b.addEventListener('click', ()=>showReport(b.dataset.id)));
@@ -1349,6 +1353,24 @@
       };
       input.click();
     });
+  }
+
+  // ========== 设置页面 ==========
+  function renderSettings() {
+    const sharedPwd = getStore('sharedExamPassword', '');
+    app.innerHTML = '<h1>⚙️ 设置</h1>'
+      + '<div class="card" style="max-width:500px;">'
+      + '<div class="form-group"><label>答题者共享考核密码</label><input type="text" id="sharedPwdInput" value="'+sharedPwd+'" placeholder="设密码后答题者需输入才能登录">'
+      + '<span style="color:#94a3b8;font-size:0.8rem;">不设则任何人输入姓名即可登录</span></div>'
+      + '<button id="saveSettingsBtn" class="success">保存设置</button>'
+      + '<button id="cancelSettingsBtn" class="secondary">返回</button></div>';
+    document.getElementById('saveSettingsBtn').addEventListener('click', ()=>{
+      const val = document.getElementById('sharedPwdInput').value.trim();
+      setStore('sharedExamPassword', val);
+      toast(val ? '考核密码已设置' : '考核密码已取消，答题者可任意登录');
+      renderExaminerDashboard();
+    });
+    document.getElementById('cancelSettingsBtn').addEventListener('click', ()=>renderExaminerDashboard());
   }
 
   // ========== 启动 ==========
