@@ -1,354 +1,239 @@
-"""Convert .docx to clean Apple-style HTML training page."""
+"""Convert .docx to training HTML page — matching market dept style."""
 import sys, os, json, zipfile, shutil, re, subprocess
 import xml.etree.ElementTree as ET
-
-NS = {
-    'w': 'http://schemas.openxmlformats.org/wordprocessingml/2006/main',
-    'wp': 'http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing',
-    'a': 'http://schemas.openxmlformats.org/drawingml/2006/main',
-    'r': 'http://schemas.openxmlformats.org/officeDocument/2006/relationships',
-    'pic': 'http://schemas.openxmlformats.org/drawingml/2006/picture',
-    'v': 'urn:schemas-microsoft-com:vml',
-    'r2': 'http://schemas.openxmlformats.org/officeDocument/2006/relationships',
-}
 
 W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main'
 WP = 'http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing'
 A = 'http://schemas.openxmlformats.org/drawingml/2006/main'
 R = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships'
-R2 = R
 
-def load_rels(rels_path):
-    """Load relationship mappings from .rels file."""
-    tree = ET.parse(rels_path)
+SKIP_PATTERNS = [
+    r'^撰写\s*[：:].*', r'^适用部门\s*[：:].*',
+    r'^目录$', r'^\d+$', r'^[一二三四五六七八九十]{1,2}[、，]\s*$',
+]
+
+def load_rels(path):
     rels = {}
-    for rel in tree.getroot():
-        rid = rel.get('Id')
-        target = rel.get('Target')
-        if rid and target:
-            rels[rid] = target
+    for rel in ET.parse(path).getroot():
+        rid, target = rel.get('Id'), rel.get('Target')
+        if rid and target: rels[rid] = target
     return rels
 
-def extract_text_from_para(para):
-    """Extract plain text from a paragraph element."""
-    texts = []
-    for t in para.iter(f'{{{W}}}t'):
-        if t.text:
-            texts.append(t.text)
-    return ''.join(texts)
+def para_text(para):
+    return ''.join(t.text or '' for t in para.iter(f'{{{W}}}t'))
 
-def get_para_style(para):
-    """Get paragraph style name."""
-    pPr = para.find(f'{{{W}}}pPr')
-    if pPr is not None:
-        pStyle = pPr.find(f'{{{W}}}pStyle')
-        if pStyle is not None:
-            return pStyle.get(f'{{{W}}}val', '')
+def para_style(para):
+    pp = para.find(f'{{{W}}}pPr')
+    if pp is not None:
+        ps = pp.find(f'{{{W}}}pStyle')
+        if ps is not None: return ps.get(f'{{{W}}}val', '')
     return ''
 
-def get_image_rids(para):
-    """Extract all image rIds from a paragraph (including VML images)."""
+def image_rids(para):
     rids = []
-
-    # Standard drawing images (wp:inline)
-    for inline in para.iter(f'{{{WP}}}inline'):
-        for blip in inline.iter(f'{{{A}}}blip'):
-            embed = blip.get(f'{{{R}}}embed')
-            if embed and embed not in rids:
-                rids.append(embed)
-
-    # Anchored images
-    for anchor in para.iter(f'{{{WP}}}anchor'):
-        for blip in anchor.iter(f'{{{A}}}blip'):
-            embed = blip.get(f'{{{R}}}embed')
-            if embed and embed not in rids:
-                rids.append(embed)
-
-    # VML images (legacy format, often in .emf)
-    for imagedata in para.iter('{urn:schemas-microsoft-com:vml}imagedata'):
-        rid = imagedata.get(f'{{{R2}}}id')
-        if rid and rid not in rids:
-            rids.append(rid)
-
+    for el in para.iter(f'{{{WP}}}inline'), para.iter(f'{{{WP}}}anchor'):
+        for e in el:
+            for blip in e.iter(f'{{{A}}}blip'):
+                emb = blip.get(f'{{{R}}}embed')
+                if emb and emb not in rids: rids.append(emb)
+    for im in para.iter('{urn:schemas-microsoft-com:vml}imagedata'):
+        rid = im.get(f'{{{R}}}id')
+        if rid and rid not in rids: rids.append(rid)
     return rids
 
-def convert_emf_to_png(emf_path):
-    """Convert .emf to .png using ImageMagick."""
-    png_path = emf_path.rsplit('.', 1)[0] + '.png'
+def emf_to_png(path):
+    out = path.rsplit('.', 1)[0] + '.png'
     try:
-        subprocess.run(['magick', emf_path, png_path], check=True, capture_output=True)
-        return png_path
+        subprocess.run(['magick', path, out], check=True, capture_output=True)
+        return out
     except:
         try:
-            subprocess.run(['convert', emf_path, png_path], check=True, capture_output=True)
-            return png_path
+            subprocess.run(['convert', path, out], check=True, capture_output=True)
+            return out
         except:
             return None
 
-def get_heading_level(style_name):
-    """Map paragraph style to heading level."""
-    style_lower = (style_name or '').lower()
-    if 'heading1' in style_lower or '1' in style_lower and 'heading' in style_lower:
-        return 1
-    if 'heading2' in style_lower or '2' in style_lower and 'heading' in style_lower:
-        return 2
-    if 'heading3' in style_lower:
-        return 3
-    return 0
-
-def is_toc_item(text):
-    """Detect if text is a table-of-contents line."""
-    return bool(re.match(r'^[\d\.\s]+$', text.strip()))
-
-def parse_table(table_elem, rels, image_map):
-    """Parse a table element to HTML."""
-    rows_html = []
-    for row in table_elem.iter(f'{{{W}}}tr'):
-        cells_html = []
-        for cell in row.iter(f'{{{W}}}tc'):
-            cell_texts = []
-            for para in cell.iter(f'{{{W}}}p'):
-                t = extract_text_from_para(para).strip()
-                if t:
-                    cell_texts.append(t)
-            cells_html.append('<td>' + ' '.join(cell_texts) + '</td>')
-        if cells_html:
-            rows_html.append('<tr>' + ''.join(cells_html) + '</tr>')
-    if rows_html:
-        return '<table>' + ''.join(rows_html) + '</table>'
-    return ''
-
-SKIP_PATTERNS = [
-    r'^撰写\s*[：:].*',
-    r'^适用部门\s*[：:].*',
-    r'^目录$',
-    r'^\d+$',
-    r'^[一二三四五六七八九十]{1,2}[、，]\s*$',
-]
-
-def reformat_para(text):
-    """Clean up paragraph text."""
+def clean_text(text):
     text = re.sub(r'\s+', ' ', text).strip()
-    if not text:
-        return text
-    # Remove consecutive duplicate text (Word header/footer artifact)
+    if not text: return text
     half = len(text) // 2
     if half > 3 and text[:half] == text[half:]:
         text = text[:half].strip()
-    # Skip boilerplate lines
     for pat in SKIP_PATTERNS:
-        if re.match(pat, text):
-            return ''
+        if re.match(pat, text): return ''
     return text
 
-def convert_docx(docx_path, output_dir, title):
-    """Main conversion function."""
-    os.makedirs(output_dir, exist_ok=True)
-    img_dir = os.path.join(output_dir, 'images')
+def parse_table(elem):
+    rows = []
+    for tr in elem.iter(f'{{{W}}}tr'):
+        cells = []
+        for tc in tr.iter(f'{{{W}}}tc'):
+            txts = [clean_text(para_text(p)) for p in tc.iter(f'{{{W}}}p') if clean_text(para_text(p))]
+            cells.append('<td>' + ' '.join(txts) + '</td>')
+        if cells: rows.append('<tr>' + ''.join(cells) + '</tr>')
+    return '<table>' + ''.join(rows) + '</table>' if rows else ''
+
+# ---- Shared CSS (adapted from market dept style.css) ----
+SHARED_CSS = '''\
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:"Microsoft YaHei","PingFang SC","Helvetica Neue",Helvetica,Arial,sans-serif;background:#f5f7fa;color:#333;line-height:1.7;padding:2rem 1rem}
+.container{max-width:1000px;margin:0 auto;background:#fff;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,0.06);padding:2.5rem 3rem}
+h1{text-align:center;font-size:2.2rem;color:#1a2b4c;margin-bottom:1rem;border-bottom:3px solid #2d6ee0;padding-bottom:0.8rem}
+.toc{background:#f8fafd;border:1px solid #e2e8f0;border-radius:8px;padding:1.2rem 1.8rem;margin:1.5rem 0 2rem}
+.toc h3{margin-top:0;color:#1e3a6f}
+.toc ol{margin-left:1.5rem}
+.toc li{margin-bottom:0.3rem}
+.toc a{text-decoration:none;color:#2d6ee0;font-weight:500}.toc a:hover{text-decoration:underline}
+h2{font-size:1.6rem;color:#1e3a6f;margin:2.5rem 0 1.2rem;padding-left:0.5rem;border-left:6px solid #2d6ee0}
+h3{font-size:1.3rem;color:#2c3e50;margin:1.8rem 0 0.8rem}
+p,li{font-size:1rem;margin-bottom:0.6rem}
+ul,ol{margin-left:1.8rem;margin-bottom:1.2rem}li{margin-bottom:0.3rem}
+strong,b{color:#c44536;font-weight:700}
+table{width:100%;border-collapse:collapse;margin:1.5rem 0;font-size:0.95rem;box-shadow:0 2px 8px rgba(0,0,0,0.05)}
+th{background:#2d6ee0;color:#fff;padding:12px 8px;text-align:center;font-weight:600}
+td{border:1px solid #e2e8f0;padding:10px 8px;vertical-align:top;background:#fff}
+tr:nth-child(even) td{background:#f8fafd}
+.screenshot-img{display:block;max-width:100%;height:auto;margin:1.8rem auto 0.5rem;border:2px solid #d0d7de;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.08);background:#f0f4ff}
+.caption{text-align:center;font-size:0.9rem;color:#5a6b7a;margin-bottom:1.2rem;font-weight:500}
+.note-box{background:#e3f2fd;border-left:6px solid #1565c0;padding:1rem 1.5rem;margin:1.2rem 0;border-radius:0 6px 6px 0;font-weight:500}
+.highlight-box{background:#fff3e0;border-left:6px solid #e65100;padding:1rem 1.5rem;margin:1.2rem 0;border-radius:0 6px 6px 0;font-weight:500}
+.search-box{margin:1rem 0 1.5rem}
+.search-box input{width:100%;padding:0.7rem 1rem;border:2px solid #e2e8f0;border-radius:8px;font-size:1rem;transition:0.2s;font-family:inherit}
+.search-box input:focus{outline:none;border-color:#2d6ee0;box-shadow:0 0 0 3px rgba(45,110,224,0.1)}
+.search-result-count{text-align:center;font-size:0.85rem;color:#64748b;margin-top:0.3rem}
+.footer{text-align:center;color:#94a3b8;font-size:0.85rem;margin-top:3rem;border-top:1px solid #e2e8f0;padding-top:1.5rem}
+.back-link{display:inline-block;color:#2d6ee0;text-decoration:none;font-size:0.95rem;margin-bottom:1rem}
+.back-link:hover{text-decoration:underline}
+@media(max-width:640px){.container{padding:1.5rem}h1{font-size:1.6rem}}
+@media print{.search-box,.toc{display:none!important}.container{box-shadow:none;padding:1rem}body{background:#fff;padding:0}.screenshot-img{border:1px solid #ccc;box-shadow:none}h2{border-left:none;padding-left:0}}
+'''
+
+def convert(docx_path, out_dir, title):
+    os.makedirs(out_dir, exist_ok=True)
+    img_dir = os.path.join(out_dir, 'images')
     os.makedirs(img_dir, exist_ok=True)
 
-    # Unzip
-    work_dir = os.path.join('/tmp', 'docx_convert_' + os.path.basename(docx_path).split('.')[0])
-    if os.path.exists(work_dir):
-        shutil.rmtree(work_dir)
-    os.makedirs(work_dir)
+    wd = os.path.join('/tmp', 'dx_tmp_' + os.path.basename(docx_path)[:10])
+    if os.path.exists(wd): shutil.rmtree(wd)
+    os.makedirs(wd)
+    with zipfile.ZipFile(docx_path, 'r') as z: z.extractall(wd)
 
-    with zipfile.ZipFile(docx_path, 'r') as z:
-        z.extractall(work_dir)
-
-    # Load relationships
-    rels_path = os.path.join(work_dir, 'word', '_rels', 'document.xml.rels')
-    rels = load_rels(rels_path) if os.path.exists(rels_path) else {}
-
-    # Build rId → image filename map
-    image_map = {}
-    media_dir = os.path.join(work_dir, 'word', 'media')
-    if os.path.exists(media_dir):
+    rels = load_rels(os.path.join(wd, 'word', '_rels', 'document.xml.rels'))
+    img_map = {}
+    media = os.path.join(wd, 'word', 'media')
+    if os.path.exists(media):
         for rid, target in rels.items():
             if 'media/' in target:
-                fname = os.path.basename(target)
-                src = os.path.join(media_dir, fname)
+                fn = os.path.basename(target)
+                src = os.path.join(media, fn)
                 if os.path.exists(src):
-                    # Handle .emf conversion
-                    if fname.lower().endswith('.emf'):
-                        png_path = convert_emf_to_png(src)
-                        if png_path:
-                            new_name = fname.rsplit('.', 1)[0] + '.png'
-                            dst = os.path.join(img_dir, new_name)
-                            shutil.copy(png_path, dst)
-                            image_map[rid] = new_name
+                    if fn.lower().endswith('.emf'):
+                        p = emf_to_png(src)
+                        if p:
+                            nn = fn.rsplit('.', 1)[0] + '.png'
+                            shutil.copy(p, os.path.join(img_dir, nn))
+                            img_map[rid] = nn
                     else:
-                        # Optimize PNG with basic compression
-                        dst = os.path.join(img_dir, fname)
-                        shutil.copy(src, dst)
-                        image_map[rid] = fname
+                        shutil.copy(src, os.path.join(img_dir, fn))
+                        img_map[rid] = fn
 
-    # Parse document
-    doc_tree = ET.parse(os.path.join(work_dir, 'word', 'document.xml'))
-    body = doc_tree.getroot().find(f'{{{W}}}body')
+    tree = ET.parse(os.path.join(wd, 'word', 'document.xml'))
+    body = tree.getroot().find(f'{{{W}}}body')
 
-    # Build content blocks in order
-    blocks = []  # List of {'type': 'text'|'image'|'heading', 'content': ...}
-    img_counter = 0
-
+    blocks, sec_count = [], 0
     for elem in body:
         tag = elem.tag.split('}')[-1] if '}' in elem.tag else elem.tag
-
         if tag == 'p':
-            text = extract_text_from_para(elem)
-            rids = get_image_rids(elem)
-            style = get_para_style(elem)
-            hlevel = get_heading_level(style)
-
-            # Skip empty paragraphs that only have images (handled below)
-            imgs = []
-            for rid in rids:
-                if rid in image_map:
-                    img_counter += 1
-                    imgs.append(image_map[rid])
-
-            if imgs:
-                blocks.append({'type': 'image', 'images': imgs})
-
-            text = reformat_para(text)
-            if text:
-                # Skip pure TOC items and page numbers
-                if is_toc_item(text):
-                    continue
-                if re.match(r'^\d+$', text):  # standalone page numbers
-                    continue
-                if re.match(r'^[一二三四五六七八九十]、', text):  # Chinese numbered headers
-                    hlevel = 2
-                if re.match(r'^\d+[\.\、]', text) and len(text) < 80:  # numbered sub-headers
-                    hlevel = 3
-
-                if hlevel > 0:
-                    blocks.append({'type': 'heading', 'level': hlevel, 'text': text})
-                else:
-                    blocks.append({'type': 'text', 'text': text})
-
+            text = clean_text(para_text(elem))
+            rids = image_rids(elem)
+            imgs = [img_map[r] for r in rids if r in img_map]
+            if imgs: blocks.append({'t': 'img', 'imgs': imgs})
+            if not text: continue
+            # Detect headings
+            hl = 0
+            if re.match(r'^[一二三四五六七八九十]、', text): hl = 2
+            elif re.match(r'^\d+[\.\、)]\s*', text) and len(text) < 80: hl = 3
+            if hl:
+                sec_count += 1
+                sec_id = f'sec{sec_count}'
+                blocks.append({'t': 'h', 'l': hl, 'text': text, 'id': sec_id})
+            else:
+                blocks.append({'t': 'p', 'text': text})
         elif tag == 'tbl':
-            table_html = parse_table(elem, rels, image_map)
-            if table_html:
-                blocks.append({'type': 'table', 'html': table_html})
+            th = parse_table(elem)
+            if th: blocks.append({'t': 'table', 'html': th})
+
+    # Build TOC from headings
+    toc_items = [(b['text'], b['id']) for b in blocks if b['t'] == 'h' and b['l'] == 2]
+    toc_html = ''
+    if toc_items:
+        toc_html = '<div class="toc"><h3>📑 目录</h3><ol>' + \
+            ''.join(f'<li><a href="#{i}">{t}</a></li>' for t, i in toc_items) + '</ol></div>'
 
     # Generate HTML
-    html_parts = [f'''<!DOCTYPE html>
+    parts = [f'''<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{title}</title>
-<style>
-* {{ margin:0; padding:0; box-sizing:border-box }}
-body {{
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'PingFang SC', 'Microsoft YaHei', sans-serif;
-  background: #fff; color: #1d1d1f; line-height: 1.8;
-  -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
-}}
-.container {{ max-width: 860px; margin: 0 auto; padding: 3rem 2rem 5rem }}
-h1 {{
-  font-size: 2.4rem; font-weight: 700; letter-spacing: -0.02em; color: #1d1d1f;
-  margin-bottom: 0.4rem; line-height: 1.2;
-}}
-h2 {{
-  font-size: 1.5rem; font-weight: 600; color: #1d1d1f;
-  margin: 3rem 0 1rem; padding-bottom: 0.4rem;
-  border-bottom: 1px solid #e5e5e7;
-}}
-h3 {{
-  font-size: 1.15rem; font-weight: 600; color: #1d1d1f; margin: 2rem 0 0.6rem;
-}}
-p {{ margin-bottom: 0.8rem; font-size: 1rem; color: #333; }}
-img {{
-  display: block; max-width: 100%; height: auto;
-  margin: 1.2rem 0; border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-  border: 1px solid #f0f0f0;
-}}
-table {{
-  width: 100%; border-collapse: collapse; margin: 1rem 0 1.5rem; font-size: 0.93rem;
-}}
-th, td {{
-  padding: 0.7rem 1rem; text-align: left; border-bottom: 1px solid #e5e5e7;
-}}
-th {{ background: #f5f5f7; font-weight: 600; color: #1d1d1f; }}
-tr:nth-child(even) td {{ background: #fafafa }}
-ul, ol {{ margin: 0.5rem 0 0.8rem 1.5rem }}
-li {{ margin-bottom: 0.3rem }}
-.caption {{
-  text-align: center; font-size: 0.85rem; color: #86868b; margin-top: -0.6rem; margin-bottom: 1.5rem;
-}}
-.footer {{
-  margin-top: 4rem; padding-top: 2rem; border-top: 1px solid #e5e5e7;
-  text-align: center; color: #86868b; font-size: 0.85rem;
-}}
-.back-link {{ display: inline-block; color: #0066cc; text-decoration: none; font-size: 0.95rem; margin-bottom: 2rem }}
-.back-link:hover {{ text-decoration: underline }}
-@media (max-width: 640px) {{
-  .container {{ padding: 1.5rem 1rem }}
-  h1 {{ font-size: 1.8rem }}
-}}
-@media (prefers-color-scheme: dark) {{
-  body {{ background: #000; color: #f5f5f7 }}
-  h1,h2,h3,th {{ color: #f5f5f7 }}
-  p,li {{ color: #a1a1a6 }}
-  h2 {{ border-color: #333 }}
-  img {{ border-color: #333; box-shadow: 0 1px 3px rgba(255,255,255,0.05) }}
-  th {{ background: #1c1c1e }}
-  th,td {{ border-color: #333 }}
-  tr:nth-child(even) td {{ background: #1c1c1e }}
-  .footer {{ border-color: #333; color: #86868b }}
-  .caption {{ color: #86868b }}
-}}
-</style>
+<link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 <div class="container">
 <a href="../" class="back-link">← 返回培训文档目录</a>
 <h1>{title}</h1>
+{toc_html}
+<div class="search-box">
+<input type="text" id="searchInput" placeholder="🔍 搜索操作步骤…">
+<div class="search-result-count" id="searchCount"></div>
+</div>
 ''']
 
-    for block in blocks:
-        if block['type'] == 'text':
-            html_parts.append(f'<p>{block["text"]}</p>')
-        elif block['type'] == 'heading':
-            lvl = block['level']
-            if lvl == 1:
-                html_parts.append(f'<h2>{block["text"]}</h2>')
-            elif lvl == 2:
-                html_parts.append(f'<h2>{block["text"]}</h2>')
-            else:
-                html_parts.append(f'<h3>{block["text"]}</h3>')
-        elif block['type'] == 'image':
-            for img_file in block['images']:
-                html_parts.append(f'<img src="images/{img_file}" alt="操作截图" loading="lazy">')
-        elif block['type'] == 'table':
-            html_parts.append(block['html'])
+    for b in blocks:
+        if b['t'] == 'h':
+            tag = 'h2' if b['l'] == 2 else 'h3'
+            parts.append(f'<{tag} id="{b["id"]}">{b["text"]}</{tag}>')
+        elif b['t'] == 'p':
+            parts.append(f'<p>{b["text"]}</p>')
+        elif b['t'] == 'img':
+            for im in b['imgs']:
+                parts.append(f'<img src="images/{im}" alt="操作截图" class="screenshot-img" loading="lazy">')
+                parts.append('<p class="caption">▲ 操作截图</p>')
+        elif b['t'] == 'table':
+            parts.append(b['html'])
 
-    html_parts.append('''<div class="footer">
+    parts.append('''<div class="footer">
 <p>市场部内部培训专用 · 请以最新系统实际界面为准</p>
 </div>
 </div>
+<script>
+(function(){
+var q=document.getElementById("searchInput"),c=document.getElementById("searchCount"),
+hs=document.querySelectorAll("h2,h3"),ps=document.querySelectorAll("p,li,table,img");
+q.addEventListener("input",function(){
+var s=this.value.trim().toLowerCase(),n=0;
+ps.forEach(function(el){if(!s||el.textContent.toLowerCase().indexOf(s)!==-1){el.style.display="";n++}else{el.style.display="none"}});
+hs.forEach(function(h){h.style.display=""});
+c.textContent=s?"找到 "+n+" 处匹配":"";
+})})();
+</script>
 </body>
 </html>''')
 
-    html_content = '\n'.join(html_parts)
+    html = '\n'.join(parts)
+    # Write HTML
+    with open(os.path.join(out_dir, 'index.html'), 'w', encoding='utf-8') as f:
+        f.write(html)
+    # Write shared CSS
+    os.makedirs(os.path.join(out_dir, 'css'), exist_ok=True)
+    with open(os.path.join(out_dir, 'css', 'style.css'), 'w', encoding='utf-8') as f:
+        f.write(SHARED_CSS)
 
-    out_path = os.path.join(output_dir, 'index.html')
-    with open(out_path, 'w', encoding='utf-8') as f:
-        f.write(html_content)
-
-    # Cleanup
-    shutil.rmtree(work_dir)
-
-    print(f'Done: {title}')
-    print(f'  Images: {img_counter}')
-    print(f'  Output: {out_path}')
-    return out_path
+    shutil.rmtree(wd)
+    print(f'Done: {title}  |  {len(toc_items)} sections  |  {sum(1 for b in blocks if b["t"]=="img")} images')
 
 if __name__ == '__main__':
-    if len(sys.argv) < 4:
-        print('Usage: python3 docx2html.py <docx> <output_dir> <title>')
-        sys.exit(1)
-    convert_docx(sys.argv[1], sys.argv[2], sys.argv[3])
+    assert len(sys.argv) >= 4, 'Usage: python3 docx2html.py <docx> <out_dir> <title>'
+    convert(sys.argv[1], sys.argv[2], sys.argv[3])
