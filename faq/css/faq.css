@@ -6,6 +6,7 @@
   --radius: 10px; --shadow: 0 1px 3px rgba(0,0,0,.04); --shadow-lg: 0 4px 16px rgba(0,0,0,.06);
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;scroll-padding-top:3.5rem}
 body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'SF Pro Display','PingFang SC','Microsoft YaHei',sans-serif;background:var(--c-bg);color:var(--c-text);line-height:1.75;-webkit-font-smoothing:antialiased}
 a{color:var(--c-accent);text-decoration:none}
 a:hover{text-decoration:underline}
