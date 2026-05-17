@@ -2,13 +2,12 @@
 .claude/
 .vscode/
 
-# Source/tool files (not needed for deployment)
+# Source files (not needed for deployment)
 YUAN SHOWROOM.jpg
-docx2html.py
-
-# Dev artifacts
 favicon.jpg
-favicon-32.png
 
-# Deploy script itself
-deploy.sh
+# Dev tools (one-time use)
+scripts/docx2html.py
+
+# Deploy script (contains credentials)
+scripts/deploy.sh

@@ -275,7 +275,7 @@
         </div>
         <button id="loginBtn" class="success" style="width:100%;">登录</button>
         <button id="resetDataBtn" class="secondary danger" style="width:100%;margin-top:0.5rem;">重置所有数据</button>
-        <a href="index.html" style="display:block;text-align:center;color:#2d6ee0;font-weight:600;margin-top:0.8rem;">📖 查看培训文档</a>
+        <a href="../" style="display:block;text-align:center;color:#2563eb;font-weight:600;margin-top:0.8rem;">← 返回首页</a>
       </div>
     `;
 
@@ -344,6 +344,7 @@
         const logistics = e.logistics || e.payment || '';
         const statusIcon = e.status===EXAM_STATUS.PENDING ? '⏳' : e.status===EXAM_STATUS.SUBMITTED ? '📤' : '✅';
         const statusLabel = e.status===EXAM_STATUS.PENDING ? '待提交' : e.status===EXAM_STATUS.SUBMITTED ? '已提交待审' : '已审核';
+        const statusClass = e.status===EXAM_STATUS.PENDING ? 'pending' : e.status===EXAM_STATUS.SUBMITTED ? 'submitted' : 'reviewed';
         const totalNodes = getFullNodes(e).length;
         const failedNodes = e.reviewResults ? Object.entries(e.reviewResults).filter(([,v])=>v==='fail').length : 0;
         const passedNodes = e.reviewResults ? Object.entries(e.reviewResults).filter(([,v])=>v==='pass').length : 0;
@@ -365,7 +366,7 @@
         return `<div class="card" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;">
           <div>
             <strong>${e.taskId}</strong> | ${typeLabel} | 物流：${logistics||'无'} | 税费：${e.tax||'无'}
-            <br><span style="color:#64748b;">${statusIcon} ${statusLabel}${reviewInfo} | 共${totalNodes}个节点 | ${new Date(e.createTime).toLocaleDateString()}</span>
+            <br><span class="status-tag ${statusClass}">${statusIcon} ${statusLabel}</span> ${reviewInfo} | 共${totalNodes}个节点 | ${new Date(e.createTime).toLocaleDateString()}
           </div>
           <div>${actionBtn}</div>
         </div>`;
@@ -759,9 +760,14 @@
         <button id="searchBtn">🔍 搜索</button>
       </div>
       <h2>考核任务列表</h2>
+      <div class="batch-bar hidden" id="batchBar">
+        <span id="batchCount" style="font-weight:600;"></span>
+        <button id="batchDeleteBtn" style="background:#dc2626;color:#fff;padding:.4rem 1rem;border:none;border-radius:6px;cursor:pointer;font-size:.85rem;">🗑️ 批量删除</button>
+        <button id="batchCancelBtn" class="secondary" style="padding:.4rem 1rem;font-size:.85rem;">取消选择</button>
+      </div>
       <div style="overflow-x:auto;">
       <table class="task-list">
-        <thead><tr><th>任务ID</th><th>订单类型</th><th>答题者</th><th>物流/税费</th><th>状态</th><th>创建时间</th><th>操作</th></tr></thead>
+        <thead><tr><th class="cb-col"><input type="checkbox" class="table-cb" id="selectAllCb" title="全选"></th><th>任务ID</th><th>订单类型</th><th>答题者</th><th>物流/税费</th><th class="status-col">状态</th><th>创建时间</th><th>操作</th></tr></thead>
         <tbody id="taskTable"></tbody>
       </table>
       </div>
@@ -792,25 +798,77 @@
       return true;
     });
     document.getElementById('taskTable').innerHTML = filtered.length === 0
-      ? '<tr><td colspan="7" style="text-align:center;color:#94a3b8;padding:2rem;">暂无记录</td></tr>'
+      ? '<tr><td colspan="8" style="text-align:center;color:#94a3b8;padding:2rem;">暂无记录</td></tr>'
       : filtered.map(e => {
-          const statusLabel = e.status === EXAM_STATUS.SUBMITTED ? '已提交' : e.status === EXAM_STATUS.REVIEWED ? '已审核' : '待提交';
+          const st = e.status;
+          const statusLabel = st === EXAM_STATUS.SUBMITTED ? '已提交' : st === EXAM_STATUS.REVIEWED ? '已审核' : '待提交';
+          const statusClass = st === EXAM_STATUS.SUBMITTED ? 'submitted' : st === EXAM_STATUS.REVIEWED ? 'reviewed' : 'pending';
           const logistics = e.logistics || e.payment || '';
           const resubmitTag = e.resubmitCount ? ` 🔄` : '';
-          return `<tr>
+          return `<tr data-exam-id="${e.taskId}">
+            <td class="cb-col"><input type="checkbox" class="table-cb exam-cb" data-id="${e.taskId}"></td>
             <td>${e.taskId}${resubmitTag}</td>
             <td>${TYPE_LABELS[e.type]||e.type}</td>
             <td>${e.candidateName}</td>
             <td>${logistics||'-'} / ${e.tax||'-'}</td>
-            <td>${statusLabel}</td>
+            <td><span class="status-tag ${statusClass}">${statusLabel}</span></td>
             <td>${new Date(e.createTime).toLocaleString()}</td>
             <td>
               <button class="viewBtn" data-id="${e.taskId}">查看</button>
-              ${e.status === EXAM_STATUS.SUBMITTED ? `<button class="reviewBtn" data-id="${e.taskId}">审核</button>` : ''}
-              ${e.status === EXAM_STATUS.REVIEWED ? `<button class="reportBtn" data-id="${e.taskId}">成绩单</button>` : ''}
+              ${st === EXAM_STATUS.SUBMITTED ? `<button class="reviewBtn" data-id="${e.taskId}">审核</button>` : ''}
+              ${st === EXAM_STATUS.REVIEWED ? `<button class="reportBtn" data-id="${e.taskId}">成绩单</button>` : ''}
             </td>
           </tr>`;
         }).join('');
+
+    // 全选/批量操作逻辑
+    const batchBar = document.getElementById('batchBar');
+    const batchCount = document.getElementById('batchCount');
+    const selectAllCb = document.getElementById('selectAllCb');
+    const cbs = document.querySelectorAll('.exam-cb');
+
+    function updateBatchBar() {
+      const checked = document.querySelectorAll('.exam-cb:checked');
+      const n = checked.length;
+      if (n > 0) {
+        batchBar.classList.remove('hidden');
+        batchCount.textContent = '已选 ' + n + ' 项';
+      } else {
+        batchBar.classList.add('hidden');
+        selectAllCb.checked = false;
+      }
+    }
+
+    if (selectAllCb) {
+      selectAllCb.addEventListener('change', function() {
+        cbs.forEach(cb => { cb.checked = this.checked; });
+        updateBatchBar();
+      });
+    }
+    cbs.forEach(cb => cb.addEventListener('change', updateBatchBar));
+
+    document.getElementById('batchDeleteBtn')?.addEventListener('click', async function() {
+      const ids = Array.from(document.querySelectorAll('.exam-cb:checked')).map(cb => cb.dataset.id);
+      if (ids.length === 0) return;
+      if (!confirm('确定删除选中的 ' + ids.length + ' 个任务及其截图数据吗？此操作不可恢复。')) return;
+      setLoading(this, true);
+      for (const id of ids) {
+        await imgDeleteAll(id);
+        _ssCache.delete(id);
+      }
+      let exams = getExamsRaw();
+      exams = exams.filter(e => !ids.includes(e.taskId));
+      saveExams(exams);
+      setLoading(this, false);
+      toast('已删除 ' + ids.length + ' 个任务');
+      renderExaminerDashboard(filter);
+    });
+
+    document.getElementById('batchCancelBtn')?.addEventListener('click', function() {
+      cbs.forEach(cb => { cb.checked = false; });
+      selectAllCb.checked = false;
+      updateBatchBar();
+    });
   }
 
   // ========== 创建考核（支持批量） ==========
@@ -1276,7 +1334,7 @@
     overlay.innerHTML = `
       <div class="modal-content">
         <button class="modal-close no-print">✕ 关闭</button>
-        <h1 style="border-bottom:3px solid #2d6ee0;padding-bottom:0.8rem;">考核成绩单</h1>
+        <h1 style="border-bottom:2px solid #e2e8f0;padding-bottom:0.8rem;">考核成绩单</h1>
         <p><strong>答题者：</strong>${exam.candidateName} | <strong>任务ID：</strong>${exam.taskId}</p>
         <p><strong>类型：</strong>${TYPE_LABELS[exam.type]||exam.type} | 物流：${logistics||'无'} | 税费：${exam.tax||'无'} ${exam.resubmitCount ? '| 重提交：'+exam.resubmitCount+'次' : ''}</p>
         <p><strong>结果：</strong>通过 ${passed}/${nodes.length} | 不通过 ${failed}/${nodes.length}</p>

@@ -130,4 +130,17 @@ body::after {
   .modal-overlay { background: white; position: static; }
   .modal-content { box-shadow: none; padding: 0; max-height: none; }
   .modal-content img { max-width: 100px; }
+
+/* 状态标签 */
+.status-tag{display:inline-block;padding:.2rem .7rem;border-radius:100px;font-size:.78rem;font-weight:600;white-space:nowrap}
+.status-tag.pending{background:#f1f5f9;color:#64748b}
+.status-tag.submitted{background:#dbeafe;color:#1d4ed8}
+.status-tag.reviewed{background:#dcfce7;color:#16a34a}
+
+/* 批量操作 */
+.batch-bar{display:flex;align-items:center;gap:.8rem;padding:.6rem 1rem;background:#f8fafc;border-radius:8px;margin-bottom:.8rem;border:1px solid #e2e8f0}
+.batch-bar.hidden{display:none}
+.table-cb{width:20px;height:20px;cursor:pointer;accent-color:#2563eb}
+.task-list .cb-col{width:40px;text-align:center}
+.task-list .status-col{width:100px}
 }
