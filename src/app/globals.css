@@ -1,0 +1,71 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * { box-sizing: border-box; }
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  body {
+    background: #f5f4f1;
+    color: #444;
+    font-family: 'Helvetica Neue', Helvetica, Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    line-height: 1.7;
+  }
+  ::selection {
+    background: #111;
+    color: #f5f4f1;
+  }
+}
+
+@layer components {
+  .section-container {
+    @apply max-w-[1400px] mx-auto px-6 md:px-12 lg:px-20;
+  }
+
+  /* Label — small uppercase, visible but subtle */
+  .label-text {
+    @apply text-[0.7rem] tracking-[0.14em] uppercase text-neutral-500 font-light;
+  }
+
+  /* Body — readable paragraph text */
+  .body-text {
+    @apply text-[0.95rem] leading-[1.8] text-neutral-700 font-light;
+  }
+
+  /* Heading — editorial section titles */
+  .section-heading {
+    @apply text-[2rem] md:text-[2.8rem] font-light leading-[1.2] tracking-[-0.01em] text-neutral-900;
+  }
+
+  /* Document content — restore list styles killed by Tailwind preflight */
+  .doc-content ol { list-style: decimal; padding-left: 1.5rem; }
+  .doc-content ul { list-style: disc; padding-left: 1.5rem; }
+  .doc-content ol li, .doc-content ul li { padding-left: 0.25rem; margin-bottom: 0.35rem; }
+  .doc-content ol li::marker { color: #737373; font-weight: 500; }
+  .doc-content ul li::marker { color: #a3a3a3; }
+}
+
+/* ── Mobile responsive ── */
+@media (max-width: 1023px) {
+  button, a, [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 16px);
+  }
+  .safe-top {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+}
+[id] { scroll-margin-top: 5rem; }
+.sidebar-overlay { transition: opacity 0.25s ease; }
+.sidebar-drawer { transition: transform 0.25s ease; will-change: transform; }
+.table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }

@@ -9,5 +9,25 @@ favicon.jpg
 # Dev tools (one-time use)
 scripts/docx2html.py
 
-# Deploy script (contains credentials)
-scripts/deploy.sh
+# Build output
+dist/
+.next/
+node_modules/
+
+# Environment
+.env.local
+.env
+
+# Deployment (contains secrets)
+ecosystem.config.js
+
+# Database
+prisma/dev.db
+
+# Uploaded content
+public/uploads/
+public/images/docx-media/
+
+# OS files
+.DS_Store
+._*

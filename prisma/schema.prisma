@@ -1,0 +1,112 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Company {
+  id          String       @id @default(cuid())
+  name        String       @unique
+  slug        String       @unique
+  description String?
+  departments Department[]
+  users       User[]
+  createdAt   DateTime     @default(now())
+}
+
+model User {
+  id            String     @id @default(cuid())
+  email         String     @unique
+  name          String
+  passwordHash  String
+  role          String     @default("staff")
+  companyId     String?
+  company       Company?   @relation(fields: [companyId], references: [id])
+  departmentId  String?
+  department    Department? @relation(fields: [departmentId], references: [id])
+  documents     Document[]
+  auditLogs     AuditLog[]
+  chatLogs      ChatLog[]
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+}
+
+model Department {
+  id            String              @id @default(cuid())
+  name          String              @unique
+  slug          String              @unique
+  description   String?
+  companyId     String?
+  company       Company?            @relation(fields: [companyId], references: [id])
+  users         User[]
+  ownedDocs     Document[]          @relation("OwnerDepartment")
+  audienceDocs  DocumentAudience[]  @relation("AudienceDepartment")
+  faqs          Faq[]
+  createdAt     DateTime            @default(now())
+}
+
+model Document {
+  id              String              @id @default(cuid())
+  title           String
+  slug            String              @default("")
+  content         String              @default("")  // 待迁移到 fullContent
+  fullContent     String              @default("")  // 原始详细文档
+  condensedContent String             @default("")  // 精简版文档
+  displayMode     String              @default("full") // full | condensed | both
+  category        String              @default("general")
+  ownerDeptId     String
+  ownerDept       Department          @relation("OwnerDepartment", fields: [ownerDeptId], references: [id])
+  audiences       DocumentAudience[]
+  authorId        String
+  author          User                @relation(fields: [authorId], references: [id])
+  auditLogs       AuditLog[]
+  visibility      String              @default("department")
+  sourcePath      String              @default("")
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+}
+
+model DocumentAudience {
+  id            String     @id @default(cuid())
+  documentId    String
+  document      Document   @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  departmentId  String
+  department    Department @relation("AudienceDepartment", fields: [departmentId], references: [id])
+
+  @@unique([documentId, departmentId])
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  documentId  String?
+  document    Document? @relation(fields: [documentId], references: [id])
+  action      String   // view | login | download
+  createdAt   DateTime @default(now())
+}
+
+model Faq {
+  id           String     @id @default(cuid())
+  question     String
+  answer       String     // Markdown
+  departmentId String
+  department   Department @relation(fields: [departmentId], references: [id])
+  category     String     @default("general")
+  order        Int        @default(0)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+
+model ChatLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  question  String
+  answer    String
+  sources   String   @default("[]")  // JSON array of source titles
+  createdAt DateTime @default(now())
+}
