@@ -18,6 +18,7 @@ export async function POST(req: NextRequest) {
     id: user.id,
     role: user.role,
     companyId: user.companyId || '',
+    companyName: (user as any).companyName || '',
     departmentId: user.departmentId || '',
     departmentName: user.departmentName || '',
   }), {

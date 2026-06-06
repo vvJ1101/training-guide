@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma, getSessionFromCookies, getVisibleDeptIds } from '@/lib/auth'
+import { prisma, getSessionFromCookies } from '@/lib/auth'
+import { buildDocumentWhere } from '@/lib/permissions/documents'
 
 export async function GET(req: NextRequest) {
   const session = getSessionFromCookies(req.headers.get('cookie'))
@@ -14,25 +15,13 @@ export async function GET(req: NextRequest) {
   if (category && category !== 'All') conditions.push({ category })
   if (owner && owner !== 'All') conditions.push({ ownerDept: { slug: owner } })
   if (audience && audience !== 'All') {
-    // Include docs that explicitly target this department OR have no audiences (= all departments)
     conditions.push({
-      OR: [
-        { audiences: { some: { department: { slug: audience } } } },
-        { audiences: { none: {} } },
-      ],
+      audiences: { some: { department: { slug: audience } } },
     })
   }
 
-  // Department filtering: non-admin users see only docs for their department
-  if (session.role !== 'super_admin') {
-    const deptIds = await getVisibleDeptIds(session)
-    conditions.push({
-      OR: [
-        { ownerDeptId: { in: deptIds } },
-        { audiences: { some: { departmentId: { in: deptIds } } } },
-      ],
-    })
-  }
+  // Unified permission: ownerDept OR audience includes user's department
+  conditions.push(buildDocumentWhere(session))
 
   const where: Record<string, unknown> = {}
   if (conditions.length > 0) where.AND = conditions
@@ -41,6 +30,7 @@ export async function GET(req: NextRequest) {
     where,
     select: {
       id: true, title: true, slug: true, category: true, updatedAt: true,
+      ownerDeptId: true,
       condensedContent: true, fullContent: true,
       ownerDept: { select: { name: true, slug: true } },
       audiences: { include: { department: { select: { name: true, slug: true } } } },

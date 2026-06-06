@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import OpenAI from 'openai'
-import { prisma, getSessionFromCookies, getVisibleDeptIds } from '@/lib/auth'
+import { prisma, getSessionFromCookies } from '@/lib/auth'
+import { canEditDocument } from '@/lib/permissions/documents'
 import { sanitizeMarkdown } from '@/lib/sanitize'
 import { PHASE1_SYSTEM_PROMPT } from '@/lib/prompts/phase1-extract'
 
@@ -77,18 +78,22 @@ Mermaid flowchart TD。如果原文无流程则跳过。
   2. 第二步
   3. 第三步
 - **执行结果**：...
-- **相关截图**：[IMAGE_X]
+- **相关截图**：
 
-**图片-步骤绑定规则（强制执行，违反判定为解析失败）**：
-- 原文中每张图片 MUST 绑定到对应的操作步骤内
-- [IMAGE_X] 必须出现在步骤的"相关截图"行，X 为图片在原文中的出现顺序（1, 2, 3...）
-- 每张图片至少绑定一个 step，禁止孤立图片（orphan images）
-- 禁止将所有图片堆在文末——必须在各自步骤内
-- 禁止删除图片引用
-- 禁止改变图片顺序
+  ![图片描述](/uploads/documents/xxx/xxx.png)
 
-**绑定验证（自查）**：
-生成完成后自查：步骤中出现的 [IMAGE_X] 总数是否等于原文图片总数？不等则必须补齐。
+**图片-步骤绑定规则（强制执行，违反判定为生成失败）**：
+
+1. 图片必须使用原文 fullContent 中的真实 Markdown 引用 ! [描述](path)，禁止使用 [IMAGE_1] 这类占位符
+2. 每张图片 MUST 嵌入到对应操作步骤的"相关截图"下
+3. 图片在步骤中的顺序必须与原文一致
+4. 禁止将图片集中堆在文末——每张图都在其所属步骤内
+5. 禁止删除任何图片引用
+6. 禁止输出 orphan images（未归属任何步骤的图片）
+
+**覆盖验证（生成后必须自查）**：
+- condensedContent 中 ! [ 开头的图片引用数量 是否 = fullContent 中 ! [ 开头的图片引用数量？
+- 不等则必须补齐，否则判定为生成失败
 
 ### # 审核检查清单
 
@@ -239,11 +244,9 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   })
   if (!doc) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
-  if (session.role === 'dept_admin') {
-    const deptIds = await getVisibleDeptIds(session)
-    if (!deptIds.includes(doc.ownerDeptId)) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-    }
+  // dept_admin: only own department's docs
+  if (!canEditDocument(session, doc.ownerDeptId) && session.role !== 'super_admin') {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
   const content = doc.fullContent || ''

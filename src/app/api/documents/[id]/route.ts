@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma, getSessionFromCookies, getVisibleDeptIds } from '@/lib/auth'
+import { prisma, getSessionFromCookies } from '@/lib/auth'
+import { canReadDocument, canEditDocument, canDeleteDocument } from '@/lib/permissions/documents'
 import { existsSync, rmSync } from 'fs'
 import { join } from 'path'
 import { sanitizeMarkdown } from '@/lib/sanitize'
@@ -18,12 +19,9 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   })
   if (!doc) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
-  // Check department permission
-  if (session.role !== 'super_admin') {
-    const deptIds = await getVisibleDeptIds(session)
-    const allowed = deptIds.includes(doc.ownerDeptId) ||
-      doc.audiences.some(a => deptIds.includes(a.departmentId))
-    if (!allowed) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  // READ check: audience OR ownerDept OR super_admin
+  if (!canReadDocument(session, doc)) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
   // Return both fullContent and condensedContent, remap for frontend
@@ -43,12 +41,9 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
   })
   if (!doc) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
-  // dept_admin can only edit docs in their company
-  if (session.role === 'dept_admin') {
-    const deptIds = await getVisibleDeptIds(session)
-    if (!deptIds.includes(doc.ownerDeptId)) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-    }
+  // dept_admin can only edit docs owned by their department
+  if (!canEditDocument(session, doc.ownerDeptId)) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
   const body = await req.json()
@@ -106,12 +101,9 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
   })
   if (!doc) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
-  // dept_admin can only delete docs in their company
-  if (session.role === 'dept_admin') {
-    const deptIds = await getVisibleDeptIds(session)
-    if (!deptIds.includes(doc.ownerDeptId)) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-    }
+  // dept_admin can only delete docs owned by their department
+  if (!canDeleteDocument(session, doc.ownerDeptId)) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
   // Delete related records

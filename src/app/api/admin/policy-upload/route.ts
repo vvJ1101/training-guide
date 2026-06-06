@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getSessionFromCookies } from '@/lib/auth'
+import { getSessionFromCookies, canEditPolicy } from '@/lib/auth'
 import { writeFileSync, mkdirSync, copyFileSync, existsSync } from 'fs'
 import { join } from 'path'
 import XLSX from 'xlsx'
@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic'
 
 export async function POST(req: NextRequest) {
   const session = getSessionFromCookies(req.headers.get('cookie'))
-  if (!session?.id || session.role !== 'super_admin') {
+  if (!session?.id || !canEditPolicy(session)) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 

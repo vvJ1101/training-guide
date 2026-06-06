@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { getSessionFromCookies } from '@/lib/auth'
+import { getSessionFromCookies, canManageUsers } from '@/lib/auth'
 import { hash } from 'bcryptjs'
 
 function forbid() { return NextResponse.json({ error: 'Forbidden' }, { status: 403 }) }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const session = getSessionFromCookies(req.headers.get('cookie'))
+  if (!session?.id || !canManageUsers(session)) return forbid()
+
   const users = await prisma.user.findMany({
     select: {
       id: true, email: true, name: true, role: true,

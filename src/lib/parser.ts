@@ -1,3 +1,16 @@
+/**
+ * 🔒 SYSTEM LOCK — DO NOT MODIFY WITHOUT EXPLICIT APPROVAL
+ *
+ * This is the verified DOCX→Markdown image extraction pipeline.
+ * See CLAUDE.md "图片处理管线" section for the full spec.
+ *
+ * RED LINES:
+ *   - Do NOT add hash-based dedup in mammoth convertImage (breaks src generation)
+ *   - Do NOT modify turndown config that affects image output
+ *   - Do NOT change Step 3 src replacement logic for non-local paths
+ *   - Do NOT share seenHashes between JSZip and mammoth extraction steps
+ */
+
 import mammoth from 'mammoth'
 import JSZip from 'jszip'
 import { writeFileSync, mkdirSync, existsSync } from 'fs'
@@ -56,8 +69,16 @@ export async function parseDocx(buffer: Buffer, documentId?: string): Promise<{
   const docDir = documentId ? join(UPLOADS_DIR, documentId) : join(UPLOADS_DIR, 'temp')
   if (!existsSync(docDir)) mkdirSync(docDir, { recursive: true })
 
+  // Dedup tracking: content hash → filename (avoid saving same image twice)
+  const seenHashes = new Set<string>()
+  function hashBuffer(buf: Buffer): string {
+    // Fast hash: size + first 64 bytes + last 64 bytes
+    const head = buf.slice(0, 64).toString('hex')
+    const tail = buf.slice(-64).toString('hex')
+    return `${buf.length}:${head}:${tail}`
+  }
+
   // ── Step 1: Extract ALL images from word/media/ via JSZip (fallback for WPS/non-standard) ──
-  // Build map: original filename → saved UUID path
   const imageMap = new Map<string, string>()
 
   try {
@@ -77,6 +98,9 @@ export async function parseDocx(buffer: Buffer, documentId?: string): Promise<{
       const uuidName = `${uuidv4()}.${safeExt}`
       try {
         const fileData = await file.async('nodebuffer')
+        const h = hashBuffer(fileData)
+        if (seenHashes.has(h)) continue // dedup
+        seenHashes.add(h)
         writeFileSync(join(docDir, uuidName), fileData)
         imageMap.set(origName, `/uploads/documents/${documentId || 'temp'}/${uuidName}`)
       } catch { /* skip */ }
@@ -87,17 +111,24 @@ export async function parseDocx(buffer: Buffer, documentId?: string): Promise<{
   const result = await mammoth.convertToHtml(
     { buffer },
     {
+      // 🔒 DO NOT add hash/seenHashes check here — must always return valid src
+      // JSZip (Step 1) handles dedup independently. Adding dedup here causes
+      // ALL images to be stripped (empty src → turndown drops them).
       convertImage: mammoth.images.imgElement((image) => {
         return image.read().then((imgBuffer) => {
           const mime = image.contentType || 'image/png'
           const ext = mime.replace('image/', '')
+          // Only allow common image formats
           const safeExt = ['png', 'jpg', 'jpeg', 'webp', 'gif'].includes(ext) ? ext : 'png'
           const filename = `${uuidv4()}.${safeExt}`
           try {
             writeFileSync(join(docDir, filename), imgBuffer)
           } catch { /* skip on disk error */ }
           return { src: `/uploads/documents/${documentId || 'temp'}/${filename}` }
-        }).catch(() => ({ src: '' }))
+        }).catch(() => {
+          // If image read fails, return empty to skip this image
+          return { src: '' }
+        })
       }),
       styleMap: [
         "p[style-name='Heading 1'] => h1:fresh",

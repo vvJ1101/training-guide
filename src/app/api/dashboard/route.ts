@@ -1,19 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma, getSessionFromCookies, getVisibleDeptIds } from '@/lib/auth'
+import { prisma, getSessionFromCookies } from '@/lib/auth'
+import { buildDocumentWhere } from '@/lib/permissions/documents'
 
 export async function GET(req: NextRequest) {
   const session = getSessionFromCookies(req.headers.get('cookie'))
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  // Non-admin users only see docs for their department
-  const docWhere: Record<string, unknown> = {}
-  if (session.role !== 'super_admin') {
-    const deptIds = await getVisibleDeptIds(session)
-    docWhere.OR = [
-      { ownerDeptId: { in: deptIds } },
-      { audiences: { some: { departmentId: { in: deptIds } } } },
-    ]
-  }
+  // Unified permission: ownerDept OR audience includes user's department
+  const docWhere = buildDocumentWhere(session)
 
   const [
     docCount, deptCount, companyCount,

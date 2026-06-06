@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import Database from 'better-sqlite3'
 import path from 'path'
 import { getSessionFromCookies } from '@/lib/auth'
+import { buildDocumentWhere } from '@/lib/permissions/documents'
+import { prisma } from '@/lib/prisma'
 
 const DB_PATH = path.join(process.cwd(), 'prisma', 'dev.db')
 
@@ -13,6 +15,7 @@ interface SearchResult {
   category: string
   slug: string
   audienceSlug: string
+  ownerDeptId: string
 }
 
 export async function GET(req: NextRequest) {
@@ -31,7 +34,6 @@ export async function GET(req: NextRequest) {
   db.exec('PRAGMA journal_mode=WAL')
 
   try {
-    // Build FTS5 query — for Chinese, use simple term matching without quotes
     const clean = q.replace(/['"*()^]/g, '')
     const ftsQuery = clean.includes(' ')
       ? clean.split(/\s+/).filter(Boolean).map(t => `"${t}"`).join(' ')
@@ -41,6 +43,7 @@ export async function GET(req: NextRequest) {
       SELECT
         d.id,
         d.title,
+        d.ownerDeptId,
         snippet(document_fts, 2, '<mark>', '</mark>', '…', 40) as title_highlight,
         snippet(document_fts, 3, '<mark>', '</mark>', '…', 60) as content_snippet,
         d.slug,
@@ -63,19 +66,31 @@ export async function GET(req: NextRequest) {
 
     const results = db.prepare(sql).all(...params) as any[]
 
-    const items: SearchResult[] = results.map((r: any) => ({
-      id: r.id,
-      title: r.title_highlight || r.title,
-      snippet: r.content_snippet || '',
-      department: r.department,
-      category: r.category,
-      slug: r.slug,
-      audienceSlug: r.audience_slug || '',
-    }))
+    // Permission filter: only return documents the user can access
+    const where = buildDocumentWhere(session)
+    const accessibleIds = Object.keys(where).length === 0
+      ? results.map((r: any) => r.id) // super_admin: all results
+      : (await prisma.document.findMany({
+          where: { ...where, id: { in: results.map((r: any) => r.id) } },
+          select: { id: true },
+        })).map(d => d.id)
+
+    const allowedSet = new Set(accessibleIds)
+    const items: SearchResult[] = results
+      .filter((r: any) => allowedSet.has(r.id))
+      .map((r: any) => ({
+        id: r.id,
+        title: r.title_highlight || r.title,
+        snippet: r.content_snippet || '',
+        department: r.department,
+        category: r.category,
+        slug: r.slug,
+        audienceSlug: r.audience_slug || '',
+        ownerDeptId: r.ownerDeptId,
+      }))
 
     return NextResponse.json({ results: items, total: items.length })
   } catch (err: any) {
-    // FTS syntax errors or empty results
     if (err.message?.includes('fts5')) {
       return NextResponse.json({ results: [], total: 0 })
     }

@@ -129,7 +129,7 @@ DOCX 上传
   → 用户确认 → 存储 condensedContent + displayMode='both'
 ```
 
-### 图片处理管线
+### 图片处理管线（🔒 系统收口 — 禁止修改）
 
 ```
 DOCX byte array
@@ -139,6 +139,24 @@ DOCX byte array
   → turndown → ![图片](path)
   → Nginx location /showroom/uploads/ → alias 直接 serve
 ```
+
+> ⚠️ **系统收口声明**：此管线已通过多轮调试验证。以下规则为红线，任何人（包括 AI）不得违反：
+
+**禁止修改的文件**：
+- `src/lib/parser.ts` — 图片提取 + turndown 转换逻辑
+- 服务器 `/etc/nginx/sites-enabled/training` — uploads alias 配置
+
+**禁止的操作**：
+- ❌ 禁止在 mammoth convertImage 中增加去重/过滤逻辑（会破坏 img src 生成）
+- ❌ 禁止修改 turndown 配置中影响图片转换的选项
+- ❌ 禁止在 Step 3 清洗中修改非 local-path 图片的 src
+- ❌ 禁止修改 Nginx uploads alias 规则
+
+**唯一允许的修改**（需确认后执行）：
+- ✅ 新增图片格式支持（如 webp/gif）→ 仅修改 safeExt 白名单
+- ✅ 修改 alt 文本清洗规则 → 不影响 src 属性
+
+**验证标准**：上传 DOCX 后 fullContent 中 `![` 数量 = DOCX 中图片数量。不一致即为 Bug。
 
 ### AI 智能解析（V3 两阶段）
 

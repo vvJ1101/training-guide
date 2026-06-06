@@ -23,6 +23,7 @@ export function InternalSidebar({ open = true, onClose }: Props) {
   const [companies, setCompanies] = useState<Company[]>([])
   const [departments, setDepartments] = useState<Department[]>([])
   const [expanded, setExpanded] = useState<Record<string, boolean>>({})
+  const [user, setUser] = useState<{ role: string; companyName: string; departmentName: string } | null>(null)
 
   useEffect(() => {
     fetch('/showroom/api/companies')
@@ -33,7 +34,15 @@ export function InternalSidebar({ open = true, onClose }: Props) {
       .then(r => r.json())
       .then(d => { if (Array.isArray(d)) setDepartments(d) })
       .catch(() => {})
+    fetch('/showroom/api/auth/me')
+      .then(r => r.json())
+      .then(d => { if (d?.role) setUser({ role: d.role, companyName: d.companyName || '', departmentName: d.departmentName || '' }) })
+      .catch(() => {})
   }, [])
+
+  const showAdminUsers = user?.role === 'super_admin'
+  const showPolicyUpload = user?.role === 'super_admin' ||
+    (user?.role === 'dept_admin' && user?.companyName === '时胜' && user?.departmentName === '品牌部')
 
   const toggleCompany = (slug: string) => {
     setExpanded(prev => ({ ...prev, [slug]: !prev[slug] }))
@@ -123,8 +132,12 @@ export function InternalSidebar({ open = true, onClose }: Props) {
 
         <div className="mt-4 pt-4 border-t border-neutral-100">
           <Link href="/internal/documents" className={linkClass('/internal/documents')}>文档管理</Link>
-          <Link href="/internal/admin/users" className={linkClass('/internal/admin/users')}>用户管理</Link>
-          <Link href="/internal/policy-upload" className={linkClass('/internal/policy-upload')}>更新订货政策</Link>
+          {showAdminUsers && (
+            <Link href="/internal/admin/users" className={linkClass('/internal/admin/users')}>用户管理</Link>
+          )}
+          {showPolicyUpload && (
+            <Link href="/internal/policy-upload" className={linkClass('/internal/policy-upload')}>更新订货政策</Link>
+          )}
         </div>
       </nav>
     </aside>

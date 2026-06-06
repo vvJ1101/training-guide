@@ -24,8 +24,9 @@ export async function GET(req: NextRequest) {
     id: session.id,
     role: session.role,
     companyId: session.companyId,
+    companyName: session.companyName || '',
     departmentId: session.departmentId,
-    departmentName: session.departmentName,
+    departmentName: session.departmentName || '',
     allowedDeptIds: deptIds,
   })
 }

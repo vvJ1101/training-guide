@@ -303,9 +303,9 @@ export function MarkdownReader({ doc, canManage: canManageProp, hideHeader }: { 
       .then(u => {
         if (!u?.role) return
         if (u.role === 'super_admin') { setCanManage(true); return }
-        // dept_admin: check if doc belongs to their company
-        if (u.role === 'dept_admin' && u.allowedDeptIds?.length && doc.ownerDeptId) {
-          if (u.allowedDeptIds.includes(doc.ownerDeptId)) setCanManage(true)
+        // dept_admin: can edit only docs owned by their department (v3 WRITE rule)
+        if (u.role === 'dept_admin' && u.departmentId && doc.ownerDeptId) {
+          if (u.departmentId === doc.ownerDeptId) setCanManage(true)
         }
       }).catch(() => {})
   }, [doc.id, canManageProp])
