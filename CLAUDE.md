@@ -146,11 +146,12 @@ DOCX byte array
 - 提取 title, steps, approvalFlow, riskPoints, tables, images
 - 每张图片绑定到对应 step（`imageRefs`），禁止孤立图片
 
-**Phase 2** — 精简版生成（内部第二步）：
+**Phase 2** — 精简版生成（内部第二步，当前版本 V4）：
 - 输出结构：文档概览 → 流程总览 → 系统入口 → 操作步骤 → 审核检查清单 → 高频错误 → 风险控制点 → 谁负责 → 场景FAQ
-- 图片强制绑定：`[IMAGE_X]` 必须在所属步骤内，禁止堆在文末
+- 图片强制绑定（V4）：使用 fullContent 中的真实 Markdown 引用 `![描述](path)`，禁止 `[IMAGE_X]` 占位符。每张图片必须在所属步骤内，生成后自查 `![` 数量 = 原文 `![` 数量
 - RACI 改为"谁负责"，仅在有明确信息时生成
 - 禁止 AI 套话：首先/其次/最后/综上所述
+- 版本演进：V2（7模块+Markdown）→ V3（9模块+SOP指南）→ V4（真实图片引用，禁止占位符）
 
 ### 上传文件静态服务
 
@@ -292,6 +293,18 @@ location /showroom/ {
 
 ---
 
+### 🐛 #6：AI 输出 `[IMAGE_X]` 未解析标记（已修复）
+
+**现象**：AI V3 精简版中图片以 `[IMAGE_1]`、`[IMAGE_2]` 文本占位符出现，前端无法渲染为图片。
+
+**根因**：V3 Prompt 要求 AI 输出 `- **相关截图**：[IMAGE_X]`，但 `[IMAGE_X]` 是 AI 自行编号的占位符，与 fullContent 中的真实图片路径 `![图片](/uploads/...)` 无映射关系。AI 不知道每张图片的实际文件路径。
+
+**修复（V4）**：Phase 2 Prompt 改为要求输出 fullContent 中的真实 Markdown 图片引用 `![描述](path)`，禁止生成 `[IMAGE_X]` 占位符。同时要求生成后自查 `![` 数量是否与原文一致。
+
+**教训**：AI 生成的 ID/占位符无法与系统实际资源自动关联。应要求 AI 直接引用原文中已有的资源路径，而非生成新的中间标识符。长期方案是 Phase 2 应该接收 Parser 产出的完整 imageMap（IMAGE_1 → /uploads/.../uuid.png），从而在生成时填入正确路径。
+
+---
+
 ## 九、本地开发
 
 ```bash
@@ -324,8 +337,10 @@ pm2 restart yuan-showroom
 - ❌ 禁止未经确认修改数据库 Schema
 - ❌ `prisma/dev.db` 不随部署包上传
 - ❌ 禁止 AI 改写 `fullContent` — 原文必须保持 95%+ Word 保真度
-- ❌ 禁止将图片堆在文末 — 每张 `[IMAGE_X]` 必须在所属步骤内
+- ❌ 禁止将图片堆在文末 — 每张图片引用必须在所属步骤内
 - ❌ 禁止删除图片引用
+- ❌ 禁止 AI 输出 `[IMAGE_X]` 占位符 — 必须使用 fullContent 中的真实图片路径
+- ❌ 禁止 orphan images — 每张图片必须绑定到至少一个步骤
 
 ## 十二、待办
 
@@ -334,3 +349,5 @@ pm2 restart yuan-showroom
 - [ ] 图片 OCR 提取截图中的文字信息
 - [ ] 质量审核自动化（上传后自动跑 quality-review.ts）
 - [ ] 更多 DOCX 样本的批量质量测试
+- [ ] Phase 2 传入完整 imageMap（Parser 图片路径 → Phase 2 可直接引用）
+- [ ] 图片去重（mammoth convertImage 与 JSZip 提取的重复文件）
