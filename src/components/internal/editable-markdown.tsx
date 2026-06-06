@@ -239,7 +239,7 @@ function EditableImage({ block, onChange, onDelete }: {
   const [showMenu, setShowMenu] = useState(false)
   return (
     <figure className="my-10 relative group" onMouseEnter={() => setShowMenu(true)} onMouseLeave={() => setShowMenu(false)}>
-      <img src={block.src.startsWith('/') ? `/showroom${block.src}` : block.src} alt={block.alt || '截图'}
+      <img src={block.src.startsWith('/showroom/') ? block.src : block.src.startsWith('/') ? `/showroom${block.src}` : block.src} alt={block.alt || '截图'}
         className="w-full max-w-full h-auto rounded-lg border border-neutral-200 shadow-sm" loading="lazy" />
       {showMenu && (
         <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">

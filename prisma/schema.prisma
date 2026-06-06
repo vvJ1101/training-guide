@@ -55,6 +55,7 @@ model Document {
   content         String              @default("")  // 待迁移到 fullContent
   fullContent     String              @default("")  // 原始详细文档
   condensedContent String             @default("")  // 精简版文档
+  extractedJson    String             @default("")  // Phase 1 结构提取结果 (JSON)
   displayMode     String              @default("full") // full | condensed | both
   category        String              @default("general")
   ownerDeptId     String

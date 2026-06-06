@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma, getSessionFromCookies, getVisibleDeptIds } from '@/lib/auth'
 import { existsSync, rmSync } from 'fs'
 import { join } from 'path'
+import { sanitizeMarkdown } from '@/lib/sanitize'
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   const session = getSessionFromCookies(req.headers.get('cookie'))
@@ -63,7 +64,8 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
   if (ownerDeptId) data.ownerDeptId = ownerDeptId
   if (content !== undefined) data.fullContent = typeof content === 'string' ? content.substring(0, 100000) : undefined
   if (body.condensedContent !== undefined) {
-    data.condensedContent = typeof body.condensedContent === 'string' ? body.condensedContent.substring(0, 100000) : undefined
+    const raw = typeof body.condensedContent === 'string' ? body.condensedContent.substring(0, 100000) : ''
+    data.condensedContent = sanitizeMarkdown(raw)
     // Auto-set displayMode when condensed is provided
     if (data.condensedContent) data.displayMode = 'both'
   }

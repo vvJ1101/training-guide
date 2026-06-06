@@ -114,5 +114,10 @@ export async function POST(req: NextRequest) {
     },
   })
 
-  return NextResponse.json(updated, { status: 201 })
+  return NextResponse.json({
+    ...updated,
+    parseStats: result.stats,
+    imageCount: result.imageCount,
+    parseWarnings: result.warnings,
+  }, { status: 201 })
 }

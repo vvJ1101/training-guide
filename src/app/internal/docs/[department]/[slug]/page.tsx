@@ -153,7 +153,7 @@ export default function DocPage() {
               strong: ({ children }) => <strong className="font-semibold text-neutral-800">{children}</strong>,
               img: ({ src, alt }) => src ? (
                 <figure className="my-10">
-                  <img src={src.startsWith('/') ? `/showroom${src}` : src} alt={alt || '截图'}
+                  <img src={src.startsWith('/showroom/') ? src : src.startsWith('/') ? `/showroom${src}` : src} alt={alt || '截图'}
                     className="w-full max-w-full h-auto rounded-lg border border-neutral-200 shadow-sm" loading="lazy" />
                   <figcaption className="text-[0.78rem] text-neutral-400 text-center mt-3">{alt || '操作截图'}</figcaption>
                 </figure>

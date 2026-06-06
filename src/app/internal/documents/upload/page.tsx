@@ -39,7 +39,7 @@ export default function UploadPage() {
 
   async function handleUpload(e: React.FormEvent) {
     e.preventDefault()
-    if (!file || !title || !ownerDeptId) return
+    if (status !== 'idle' || !file || !title || !ownerDeptId) return
     setStatus('uploading')
     const formData = new FormData()
     formData.append('file', file)

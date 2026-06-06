@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import OpenAI from 'openai'
 import { prisma, getSessionFromCookies, getVisibleDeptIds } from '@/lib/auth'
+import { sanitizeMarkdown } from '@/lib/sanitize'
+import { PHASE1_SYSTEM_PROMPT } from '@/lib/prompts/phase1-extract'
 
 function getClient() {
   return new OpenAI({
@@ -16,90 +18,152 @@ const CATEGORY_TO_DOC_TYPE: Record<string, string> = {
   brand: '业务指南',
 }
 
-const SYSTEM_PROMPT = `你是企业知识管理专家、流程管理顾问和培训体系设计专家。
+// ── Phase 2 System Prompt V3: 新员工培训手册 + SOP执行指南 ──
+const PHASE2_SYSTEM_PROMPT = `你是企业培训手册编写专家和 SOP 执行指南设计专家。
 
-你的任务是将企业上传的文档转换为：
-1. 适合员工阅读的结构化精简版文档（condensedContent）
-2. AI 分析元数据（analysisMeta：风险提示、完整性评分等）
+你的任务：将企业文档改写为"新员工培训手册 + SOP执行指南"，而不是文档摘要。
 
-## 输出格式（严格遵守）
+目标受众：新员工、需要按步骤完成操作的员工、培训主管。
+
+## 输出格式
 
 必须返回合法 JSON。禁止 Markdown 代码块。禁止额外文字。
 
 {
-  "condensedContent": "(Markdown 格式的精简版文档)",
+  "condensedContent": "(Markdown)",
   "analysisMeta": {
     "documentType": "SOP流程",
-    "summary": "50字以内总结",
-    "targetAudience": ["部门A", "部门B"],
+    "summary": "50字以内",
+    "targetAudience": ["部门A"],
     "estimatedReadMinutes": 10,
-    "riskAlerts": ["风险1", "风险2"],
+    "riskAlerts": [],
     "integrityScore": 85,
-    "strengths": ["优点1", "优点2"],
-    "weaknesses": ["不足1", "不足2"]
+    "strengths": [],
+    "weaknesses": []
   }
 }
 
-## condensedContent 生成规则
+## condensedContent 结构（严格按顺序，无内容则跳过）
 
-condensedContent 是给员工阅读的纯净 Markdown。目标：提高阅读效率、保留核心知识、支持 Markdown 渲染和块级编辑。
+### # 文档概览
+- **用途**：一句话说明本文档用来做什么
+- **适用部门**：...
+- **适用岗位**：...
+- **预计学习时间**：约 X 分钟
 
-**严禁在 condensedContent 中出现：** 风险提示、完整性评分、文档评价、AI 分析意见、优点、缺点、评分结果、优化建议。这些内容只能进入 analysisMeta。
+### # 流程总览
+Mermaid flowchart TD。如果原文无流程则跳过。
 
-按以下顺序生成（没有内容的模块跳过）：
+### # 系统入口
+提取所有系统名称和菜单路径，格式：
+- **系统名**
+  - → 菜单路径1
+  - → 菜单路径2
 
-### 1. 文档摘要
-- 一句话总结
-- **适用对象**：（部门/岗位）
-- **预计阅读时间**：约 X 分钟
+例如：**联欣系统** → 主题订单 → 订单审核
 
-### 2. 核心流程图
-如果文档包含流程，用 Mermaid flowchart TD 语法生成。不存在流程则跳过。
+如果原文无系统路径则跳过。
 
-### 3. 流程步骤拆解
-每个步骤：
-- **Step N - 步骤名称**
-  - 目标：...
-  - 执行人：（部门/岗位）
-  - 输入资料：...
-  - 输出结果：...
-  - 完成标准：...
+### # 操作步骤
 
-### 4. 关键知识点
-提炼核心规则、时间要求、业务要求、审批要求，条目化输出。
+每个步骤格式：
 
-### 5. 操作要点
-拆分为：✅ 必须执行 / ⚠️ 注意事项 / ❌ 禁止行为
+#### 步骤 N：步骤名称
 
-### 6. 责任矩阵
-如果存在多个角色/部门，用 Markdown 表格输出 RACI 矩阵（R=执行/A=负责/C=咨询/I=知情）。
+- **目标**：...
+- **进入路径**：系统 → 菜单 → 页面
+- **操作**：
+  1. 第一步
+  2. 第二步
+  3. 第三步
+- **执行结果**：...
+- **相关截图**：[IMAGE_X]
 
-### 7. FAQ
-生成 5~10 条常见问题，格式：
-**Q1: 问题？**
-A: 回答...
-**Q2: 问题？**
-A: 回答...
+**图片-步骤绑定规则（强制执行，违反判定为解析失败）**：
+- 原文中每张图片 MUST 绑定到对应的操作步骤内
+- [IMAGE_X] 必须出现在步骤的"相关截图"行，X 为图片在原文中的出现顺序（1, 2, 3...）
+- 每张图片至少绑定一个 step，禁止孤立图片（orphan images）
+- 禁止将所有图片堆在文末——必须在各自步骤内
+- 禁止删除图片引用
+- 禁止改变图片顺序
 
-## analysisMeta 生成规则
+**绑定验证（自查）**：
+生成完成后自查：步骤中出现的 [IMAGE_X] 总数是否等于原文图片总数？不等则必须补齐。
 
-- **documentType**：从"SOP流程/制度规范/培训资料/操作手册/业务指南/其他"中选择
-- **summary**：50字以内
-- **targetAudience**：自动识别适用部门，数组格式
-- **estimatedReadMinutes**：根据内容长度估算，数字类型
-- **riskAlerts**：仅分析原文存在的问题，不得编造。如无问题返回空数组 []
-- **integrityScore**：0-100 数字，综合评估流程完整度(30%)、责任明确度(25%)、时间节点完整度(20%)、规则明确度(15%)、风险控制完整度(10%)
-- **strengths**：列出文档优势，数组格式
-- **weaknesses**：列出文档不足，数组格式
+### # 审核检查清单
 
-## 重要约束
-- 不得修改原文事实，不得创造原文不存在的制度
-- 数字、时间节点、部门名称必须与原文一致
-- 流程图必须根据原文内容生成
-- condensedContent 与 analysisMeta 的内容不得重叠
-- 输出纯 JSON，不要用 \`\`\`json 包裹`
+对关键操作生成检查清单，格式：
 
-// ── JSON extraction & validation ──
+**XX操作前检查**：
+- ☐ 检查项1
+- ☐ 检查项2
+- ☐ 检查项3
+
+至少生成 1 个检查清单。原文没有检查项时根据操作步骤反向生成。
+
+### # 高频错误
+
+列出员工最容易犯的错误，格式：
+
+**❌ 错误**：...
+**原因**：...
+**✅ 正确做法**：...
+
+至少列出 3 条（如果原文有相关描述）。
+
+### # 风险控制点
+
+格式：
+
+- **风险点**：...
+  - **影响**：...
+  - **处理方式**：...
+
+原文无风险描述则跳过。
+
+### # 谁负责
+
+简单列出角色和职责，不要用 RACI 矩阵。格式：
+
+- **XX操作**：部门名
+- **XX审核**：部门名
+- **XX审批**：部门名
+
+只列原文明确提到的责任分配。不完整的跳过不列。
+
+### # 场景FAQ
+
+生成 5~8 条真实业务场景问答。不要机械重复原文。格式：
+
+**Q: 具体业务场景问题？**
+A: 具体操作指引...
+
+问题必须是员工在实际工作中会遇到的场景。例如：
+- "客户只付了订金怎么办？"
+- "审核不通过怎么处理？"
+- "订单取消后如何退款？"
+
+## condensedContent 禁止事项
+
+- ❌ 禁止出现 AI 套话：首先、其次、最后、综上所述、值得注意的是、以下内容、总结如下
+- ❌ 禁止出现分析意见：检测到、缺失、建议补充、优化建议
+- ❌ 禁止总结原文、禁止评价原文
+- ❌ 禁止删除图片引用 [IMAGE_X]
+- ❌ 禁止把多级编号扁平化
+
+## analysisMeta 规则（不变）
+- documentType：SOP流程/制度规范/培训资料/操作手册/业务指南/其他
+- summary：50字以内
+- riskAlerts：仅分析原文存在的风险
+- integrityScore：0-100，综合评估
+
+## 核心原则
+- 新员工无需阅读原文即可理解流程
+- 新员工可以按步骤完成操作
+- 培训主管可直接用于培训
+- 输出纯 JSON，不要用代码块包裹`
+
+// ── JSON helpers ──
 interface AnalysisMeta {
   documentType: string
   summary: string
@@ -111,18 +175,11 @@ interface AnalysisMeta {
   weaknesses: string[]
 }
 
-interface AnalysisResult {
-  draft: string
-  analysisMeta: AnalysisMeta | null
-}
-
 function extractJson(raw: string): string {
-  // Strip code fences if present
   let s = raw.trim()
   if (s.startsWith('```')) {
     s = s.replace(/^```(?:json)?\s*\n?/, '').replace(/\n?```\s*$/, '')
   }
-  // Find the outermost { ... }
   const start = s.indexOf('{')
   const end = s.lastIndexOf('}')
   if (start >= 0 && end > start) {
@@ -131,13 +188,10 @@ function extractJson(raw: string): string {
   return s
 }
 
-function parseAnalysisResult(raw: string): AnalysisResult {
+function parsePhase2Result(raw: string): { draft: string; analysisMeta: AnalysisMeta | null } {
   const json = extractJson(raw)
   let parsed: any
-  try {
-    parsed = JSON.parse(json)
-  } catch {
-    // If JSON parse fails, treat the entire raw as a Markdown draft (fallback)
+  try { parsed = JSON.parse(json) } catch {
     return { draft: raw.trim(), analysisMeta: null }
   }
 
@@ -159,8 +213,7 @@ function parseAnalysisResult(raw: string): AnalysisResult {
 }
 
 function sanitizeDraft(draft: string): string {
-  // Remove meta-commentary lines that may have leaked into the draft
-  return draft
+  let cleaned = draft
     .split('\n')
     .filter(line => {
       const kw = /^(检测到|缺失|建议补充|🔍|逻辑缺失|流程不闭环|优化建议)/
@@ -169,8 +222,10 @@ function sanitizeDraft(draft: string): string {
     .join('\n')
     .replace(/\n{4,}/g, '\n\n\n')
     .trim()
+  return sanitizeMarkdown(cleaned)
 }
 
+// ── POST handler: Two-phase pipeline ──
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   // Auth
   const session = getSessionFromCookies(req.headers.get('cookie'))
@@ -184,7 +239,6 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   })
   if (!doc) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
-  // dept_admin: only own company's docs
   if (session.role === 'dept_admin') {
     const deptIds = await getVisibleDeptIds(session)
     if (!deptIds.includes(doc.ownerDeptId)) {
@@ -205,40 +259,86 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     feedback = body.feedback || ''
     documentType = body.documentType || ''
   } catch {}
-
   const docTypeLabel = CATEGORY_TO_DOC_TYPE[documentType] || documentType || '业务指南'
 
-  // Build user prompt
-  let userPrompt = `## 文档类型：${docTypeLabel}\n\n## 原文标题：${doc.title}\n\n## 原文内容：\n${content.substring(0, 12000)}`
-  if (feedback) {
-    userPrompt += `\n\n## 用户补充意见：\n${feedback}`
-  }
-  userPrompt += `\n\n---\n请严格按照 JSON 格式输出，不要用 \`\`\`json 代码块包裹。`
+  const client = getClient()
+  const contentSnippet = content.substring(0, 12000)
+  const regenHint = feedback ? `\n## 用户补充意见：\n${feedback}` : ''
 
-  // Call DeepSeek
   try {
-    const client = getClient()
-    const completion = await client.chat.completions.create({
+    // ── Phase 1: Structure Extraction ──
+    let extractedJson = ''
+    let extractedParsed: any = null
+
+    try {
+      const p1 = await client.chat.completions.create({
+        model: 'deepseek-chat',
+        messages: [
+          { role: 'system', content: PHASE1_SYSTEM_PROMPT },
+          { role: 'user', content: `## 文档类型：${docTypeLabel}\n\n## 原文标题：${doc.title}\n\n## 原文内容：\n${contentSnippet}\n\n---\n请严格按照 JSON 格式输出，不要用代码块包裹。` },
+        ],
+        max_tokens: 4096,
+        temperature: 0.3,
+      })
+      const p1Raw = p1.choices[0]?.message?.content || ''
+      try {
+        extractedParsed = JSON.parse(extractJson(p1Raw))
+        extractedJson = JSON.stringify(extractedParsed)
+      } catch {
+        extractedJson = p1Raw.trim() // fallback: store raw if not valid JSON
+      }
+    } catch (e: any) {
+      console.error('Phase 1 failed:', e?.message || e)
+      extractedJson = ''
+    }
+
+    // Store Phase 1 result in DB
+    if (extractedJson) {
+      await prisma.document.update({
+        where: { id: doc.id },
+        data: { extractedJson },
+      }).catch(() => {})
+    }
+
+    // ── Phase 2: Condensed Generation ──
+    // Include extracted structure as context if available
+    let phase2Context = ''
+    if (extractedParsed) {
+      const ctx = {
+        title: extractedParsed.title,
+        steps: extractedParsed.steps?.length,
+        departments: extractedParsed.applicableDepartments,
+        purpose: extractedParsed.purpose,
+      }
+      phase2Context = `\n\n## 已提取的文档结构（仅供参考，不要照抄）：\n${JSON.stringify(ctx, null, 2)}`
+    }
+
+    const p2 = await client.chat.completions.create({
       model: 'deepseek-chat',
       messages: [
-        { role: 'system', content: SYSTEM_PROMPT },
-        { role: 'user', content: userPrompt },
+        { role: 'system', content: PHASE2_SYSTEM_PROMPT },
+        { role: 'user', content: `## 文档类型：${docTypeLabel}\n\n## 原文标题：${doc.title}\n\n## 原文内容：\n${contentSnippet}${phase2Context}${regenHint}\n\n---\n请严格按照 JSON 格式输出，不要用代码块包裹。` },
       ],
       max_tokens: 8192,
       temperature: 0.3,
     })
 
-    const raw = completion.choices[0]?.message?.content || ''
+    const p2Raw = p2.choices[0]?.message?.content || ''
+    const { draft, analysisMeta } = parsePhase2Result(p2Raw)
+    const clean = sanitizeDraft(draft)
 
-    // Parse JSON response
-    const result = parseAnalysisResult(raw)
-
-    // Sanitize draft
-    const draft = sanitizeDraft(result.draft)
+    // Store condensed result in DB
+    if (clean) {
+      await prisma.document.update({
+        where: { id: doc.id },
+        data: { condensedContent: clean, displayMode: 'both' },
+      }).catch(() => {})
+    }
 
     return NextResponse.json({
-      draft,
-      analysisMeta: result.analysisMeta,
+      draft: clean,
+      analysisMeta,
+      extractedJson: extractedParsed,
     })
   } catch (e: any) {
     console.error('AI analysis failed:', e?.message || e)

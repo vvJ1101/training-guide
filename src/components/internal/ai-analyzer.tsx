@@ -40,6 +40,7 @@ function scoreLabel(score: number): string {
 export function AiAnalyzer({ documentId, documentTitle, documentCategory, originalContent, onClose, onApply }: Props) {
   const [draft, setDraft] = useState('')
   const [analysisMeta, setAnalysisMeta] = useState<AnalysisMeta | null>(null)
+  const [extractedJson, setExtractedJson] = useState<any>(null)
   const [feedback, setFeedback] = useState('')
   const [loading, setLoading] = useState(false)
   const [applying, setApplying] = useState(false)
@@ -61,6 +62,9 @@ export function AiAnalyzer({ documentId, documentTitle, documentCategory, origin
         setDraft(data.draft)
         if (data.analysisMeta) {
           setAnalysisMeta(data.analysisMeta)
+        }
+        if (data.extractedJson) {
+          setExtractedJson(data.extractedJson)
         }
       } else {
         setError(data.error || '解析失败')
@@ -114,7 +118,7 @@ export function AiAnalyzer({ documentId, documentTitle, documentCategory, origin
                   ol: ({ children }) => <ol className="mb-3 space-y-0.5 list-decimal list-inside">{children}</ol>,
                   li: ({ children }) => <li className="text-[0.82rem] leading-[1.7] text-neutral-600">{children}</li>,
                   strong: ({ children }) => <strong className="font-semibold text-neutral-800">{children}</strong>,
-                  img: ({ src, alt }) => src ? <img src={src.startsWith('/') ? `/showroom${src}` : src} alt={alt || ''} className="max-w-full rounded my-3" /> : null,
+                  img: ({ src, alt }) => src ? <img src={src.startsWith('/showroom/') ? src : src.startsWith('/') ? `/showroom${src}` : src} alt={alt || ''} className="max-w-full rounded my-3" /> : null,
                   table: ({ children }) => <div className="overflow-x-auto my-3"><table className="w-full text-[0.78rem] border-collapse border border-neutral-200">{children}</table></div>,
                   th: ({ children }) => <th className="border border-neutral-200 px-2 py-1 bg-neutral-50 text-left font-semibold text-neutral-700">{children}</th>,
                   td: ({ children }) => <td className="border border-neutral-200 px-2 py-1 text-neutral-600">{children}</td>,
@@ -211,6 +215,22 @@ export function AiAnalyzer({ documentId, documentTitle, documentCategory, origin
                     </div>
                   </div>
                 </div>
+
+                {/* ── Phase 1: Structure Extraction ── */}
+                {extractedJson && (
+                  <div className="px-4 py-2 border-t border-neutral-200 bg-blue-50/50 shrink-0">
+                    <div className="flex items-center gap-2 text-[0.7rem] text-blue-700">
+                      <span>🔍 结构提取：</span>
+                      <span>{extractedJson.steps?.length || 0} 步骤</span>
+                      {extractedJson.applicableDepartments?.length > 0 && (
+                        <span>· {extractedJson.applicableDepartments.join(', ')}</span>
+                      )}
+                      {extractedJson.riskPoints?.length > 0 && (
+                        <span>· {extractedJson.riskPoints.length} 风险点</span>
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 {/* ── Analysis Meta Card ── */}
                 {analysisMeta && (

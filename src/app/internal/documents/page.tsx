@@ -112,7 +112,7 @@ function DocumentsContent() {
   // ── Upload ──
   async function handleUpload(e: React.FormEvent) {
     e.preventDefault()
-    if (!upFile || !upTitle || !upOwnerDept) return
+    if (upStatus !== 'idle' || !upFile || !upTitle || !upOwnerDept) return
     setUpStatus('uploading')
     const fd = new FormData()
     fd.append('file', upFile)
