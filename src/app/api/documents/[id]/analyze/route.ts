@@ -4,6 +4,7 @@ import { prisma, getSessionFromCookies } from '@/lib/auth'
 import { canEditDocument } from '@/lib/permissions/documents'
 import { sanitizeMarkdown } from '@/lib/sanitize'
 import { PHASE1_SYSTEM_PROMPT } from '@/lib/prompts/phase1-extract'
+import { validateOutput } from '@/lib/validator'
 
 function getClient() {
   return new OpenAI({
@@ -19,154 +20,80 @@ const CATEGORY_TO_DOC_TYPE: Record<string, string> = {
   brand: '业务指南',
 }
 
-// ── Phase 2 System Prompt V3: 新员工培训手册 + SOP执行指南 ──
-const PHASE2_SYSTEM_PROMPT = `你是企业培训手册编写专家和 SOP 执行指南设计专家。
+// ── Phase 2 V8: 极简条件驱动 ──
+// Backups: V4 at phase2-v4-backup.ts, V6 at phase2-v6-backup.ts
+const PHASE2_SYSTEM_PROMPT = `你是企业培训体系专家、SOP执行指南专家、企业知识库架构师。
 
-你的任务：将企业文档改写为"新员工培训手册 + SOP执行指南"，而不是文档摘要。
+任务：根据 fullContent 和 structuredJson，重构为新员工培训手册 + SOP执行指南。
+目标：让员工无需阅读原文即可完成工作。
 
-目标受众：新员工、需要按步骤完成操作的员工、培训主管。
+核心原则：
+- 允许：结构化、分类、合并重复内容、提炼职责、流程抽象
+- 禁止：虚构、猜测、补充不存在内容、输出空模块
+- 禁止 AI 套话：首先、其次、最后、综上所述、值得注意的是
 
-## 输出格式
+模块生成规则：先判断模块是否存在，存在才生成，不存在直接跳过。不要输出检测结果。
 
-必须返回合法 JSON。禁止 Markdown 代码块。禁止额外文字。
+## 文档概览
+始终生成。# 文档概览
+- **用途**：一句话
+- **适用部门/适用岗位/学习时间**
 
-{
-  "condensedContent": "(Markdown)",
-  "analysisMeta": {
-    "documentType": "SOP流程",
-    "summary": "50字以内",
-    "targetAudience": ["部门A"],
-    "estimatedReadMinutes": 10,
-    "riskAlerts": [],
-    "integrityScore": 85,
-    "strengths": [],
-    "weaknesses": []
-  }
-}
+## 业务目标
+仅当原文出现：业务目标 / 目标 / Purpose / Objective / 文档目的。禁止从 FAQ 或步骤推断。
 
-## condensedContent 结构（严格按顺序，无内容则跳过）
+## 审批链
+≥2 审批节点。输出 Mermaid flowchart LR。
 
-### # 文档概览
-- **用途**：一句话说明本文档用来做什么
-- **适用部门**：...
-- **适用岗位**：...
-- **预计学习时间**：约 X 分钟
+## 流程总览
+≥3 步骤节点。输出 Mermaid flowchart TD。
 
-### # 流程总览
-Mermaid flowchart TD。如果原文无流程则跳过。
+## 对比矩阵
+存在真实对比（现货/期货/云仓、角色对比、方案对比）。否则跳过。
 
-### # 系统入口
-提取所有系统名称和菜单路径，格式：
-- **系统名**
-  - → 菜单路径1
-  - → 菜单路径2
+## 决策树
+出现 如果/否则/根据情况 分支逻辑。输出 Mermaid flowchart TD。
 
-例如：**联欣系统** → 主题订单 → 订单审核
+## 部门职责表
+≥2 部门且有明确职责。否则跳过。
 
-如果原文无系统路径则跳过。
+## 联系人表
+出现 姓名+电话 或 负责人信息。优先于部门职责表。
 
-### # 操作步骤
+## 系统入口
+存在菜单/页面路径。**系统名** → 菜单 → 页面。
 
-每个步骤格式：
+## 操作步骤
+存在操作流程。
+#### 步骤 N：名称
+- **目标** / **进入路径** / **操作**：1. 2. 3. / **执行结果**
+- **相关截图**：![描述](真实路径)
 
-#### 步骤 N：步骤名称
+图片规则：
+- 图片必须使用原文 fullContent 中的真实 Markdown 引用 ! [描述](path)
+- 禁止 [IMAGE_1] [IMAGE_2] 占位符
+- 自动绑定到距离最近的步骤
+- 禁止集中在文末、禁止删除
+- 生成后自查：outputImageCount == originalImageCount，不等重新生成
 
-- **目标**：...
-- **进入路径**：系统 → 菜单 → 页面
-- **操作**：
-  1. 第一步
-  2. 第二步
-  3. 第三步
-- **执行结果**：...
-- **相关截图**：
+## 审核检查清单
+出现 检查/确认/审核/核对。☐ 项目列表。
 
-  ![图片描述](/uploads/documents/xxx/xxx.png)
+## 高频错误
+出现 错误/注意事项/警告。格式：❌ 错误 / 原因 / ✅ 正确做法。至少 3 条。
 
-**图片-步骤绑定规则（强制执行，违反判定为生成失败）**：
+## 风险控制点
+出现 风险/违规/退回/影响。格式：风险点 / 影响 / 处理方式。
 
-1. 图片必须使用原文 fullContent 中的真实 Markdown 引用 ! [描述](path)，禁止使用 [IMAGE_1] 这类占位符
-2. 每张图片 MUST 嵌入到对应操作步骤的"相关截图"下
-3. 图片在步骤中的顺序必须与原文一致
-4. 禁止将图片集中堆在文末——每张图都在其所属步骤内
-5. 禁止删除任何图片引用
-6. 禁止输出 orphan images（未归属任何步骤的图片）
+## 场景FAQ
+Q+A 同时存在才生成。答案必须来自原文，找不到则删除该条。禁止 AI 补答案。
 
-**覆盖验证（生成后必须自查）**：
-- condensedContent 中 ! [ 开头的图片引用数量 是否 = fullContent 中 ! [ 开头的图片引用数量？
-- 不等则必须补齐，否则判定为生成失败
+## 操作口诀
+文档类型为 培训资料/操作手册/SOP 且步骤 ≥4 才生成。
 
-### # 审核检查清单
-
-对关键操作生成检查清单，格式：
-
-**XX操作前检查**：
-- ☐ 检查项1
-- ☐ 检查项2
-- ☐ 检查项3
-
-至少生成 1 个检查清单。原文没有检查项时根据操作步骤反向生成。
-
-### # 高频错误
-
-列出员工最容易犯的错误，格式：
-
-**❌ 错误**：...
-**原因**：...
-**✅ 正确做法**：...
-
-至少列出 3 条（如果原文有相关描述）。
-
-### # 风险控制点
-
-格式：
-
-- **风险点**：...
-  - **影响**：...
-  - **处理方式**：...
-
-原文无风险描述则跳过。
-
-### # 谁负责
-
-简单列出角色和职责，不要用 RACI 矩阵。格式：
-
-- **XX操作**：部门名
-- **XX审核**：部门名
-- **XX审批**：部门名
-
-只列原文明确提到的责任分配。不完整的跳过不列。
-
-### # 场景FAQ
-
-生成 5~8 条真实业务场景问答。不要机械重复原文。格式：
-
-**Q: 具体业务场景问题？**
-A: 具体操作指引...
-
-问题必须是员工在实际工作中会遇到的场景。例如：
-- "客户只付了订金怎么办？"
-- "审核不通过怎么处理？"
-- "订单取消后如何退款？"
-
-## condensedContent 禁止事项
-
-- ❌ 禁止出现 AI 套话：首先、其次、最后、综上所述、值得注意的是、以下内容、总结如下
-- ❌ 禁止出现分析意见：检测到、缺失、建议补充、优化建议
-- ❌ 禁止总结原文、禁止评价原文
-- ❌ 禁止删除图片引用 [IMAGE_X]
-- ❌ 禁止把多级编号扁平化
-
-## analysisMeta 规则（不变）
-- documentType：SOP流程/制度规范/培训资料/操作手册/业务指南/其他
-- summary：50字以内
-- riskAlerts：仅分析原文存在的风险
-- integrityScore：0-100，综合评估
-
-## 核心原则
-- 新员工无需阅读原文即可理解流程
-- 新员工可以按步骤完成操作
-- 培训主管可直接用于培训
-- 输出纯 JSON，不要用代码块包裹`
+## 输出
+{"condensedContent":"...","analysisMeta":{"documentType":"","summary":"","targetAudience":[],"riskAlerts":[],"integrityScore":0}}
+禁止 Markdown 代码块、禁止解释、禁止额外文字。`
 
 // ── JSON helpers ──
 interface AnalysisMeta {
@@ -240,7 +167,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   // Load document
   const doc = await prisma.document.findUnique({
     where: { id: params.id },
-    select: { id: true, title: true, fullContent: true, ownerDeptId: true },
+    select: { id: true, title: true, fullContent: true, ownerDeptId: true, category: true },
   })
   if (!doc) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
@@ -262,7 +189,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     feedback = body.feedback || ''
     documentType = body.documentType || ''
   } catch {}
-  const docTypeLabel = CATEGORY_TO_DOC_TYPE[documentType] || documentType || '业务指南'
+  // Use body documentType > DB category > default
+  const docTypeLabel = CATEGORY_TO_DOC_TYPE[documentType] || CATEGORY_TO_DOC_TYPE[doc.category] || documentType || '业务指南'
 
   const client = getClient()
   const contentSnippet = content.substring(0, 12000)
@@ -338,10 +266,14 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       }).catch(() => {})
     }
 
+    // Phase 3: Validate output quality
+    const validation = validateOutput(clean, content)
+
     return NextResponse.json({
       draft: clean,
       analysisMeta,
       extractedJson: extractedParsed,
+      validation,
     })
   } catch (e: any) {
     console.error('AI analysis failed:', e?.message || e)

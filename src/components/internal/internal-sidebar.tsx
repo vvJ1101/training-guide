@@ -77,9 +77,11 @@ export function InternalSidebar({ open = true, onClose }: Props) {
           </button>
         )}
 
-        <Link href="/internal/dashboard" className={linkClass('/internal/dashboard')}>工作台</Link>
-        <Link href="/internal/search" className={linkClass('/internal/search')}>全文搜索</Link>
-        <Link href="/internal/faq" className={linkClass('/internal/faq')}>常见问题</Link>
+        <Link href="/internal/dashboard" className={linkClass('/internal/dashboard')}>🏠 工作台</Link>
+        <Link href="/internal/sop" className={linkClass('/internal/sop')}>📋 SOP 流程库</Link>
+        <Link href="/internal/search" className={linkClass('/internal/search')}>🔍 全文搜索</Link>
+        <Link href="/internal/faq" className={linkClass('/internal/faq')}>💬 常见问题</Link>
+        <Link href="/internal/documents" className={linkClass('/internal/documents')}>📚 全部文档</Link>
 
         <div className="mt-4">
           <p className="text-[0.6rem] tracking-[0.12em] uppercase text-neutral-400 font-medium mb-1.5 px-3">订货政策</p>

@@ -66,8 +66,35 @@ model Document {
   auditLogs       AuditLog[]
   visibility      String              @default("department")
   sourcePath      String              @default("")
+  // vNext: Document Graph
+  documentType    String              @default("general") // SOP | policy | training | guide
+  processStage    String?                               // order | payment | shipping | audit | onboarding
+  riskLevel       String?                               // low | medium | high
+  aiSummary       String?                               // AI 一句话摘要
+  // Graph edges
+  prerequisites   String              @default("[]")    // JSON array of prerequisite doc IDs
+  relatedDocs     String              @default("[]")    // JSON array of related doc IDs
   createdAt       DateTime            @default(now())
   updatedAt       DateTime            @updatedAt
+}
+
+// 🆕 Bookmarks
+model Bookmark {
+  id         String   @id @default(cuid())
+  userId     String
+  documentId String
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, documentId])
+}
+
+// 🆕 Learning Path
+model LearningPath {
+  id        String         @id @default(cuid())
+  title     String
+  deptId    String?
+  docIds    String         @default("[]")  // JSON array of doc IDs in order
+  createdAt DateTime       @default(now())
 }
 
 model DocumentAudience {

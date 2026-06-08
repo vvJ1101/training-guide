@@ -24,6 +24,35 @@ export default function DocPage() {
   const [doc, setDoc] = useState<Doc | null>(null)
   const [loading, setLoading] = useState(true)
   const [viewMode, setViewMode] = useState<ViewMode>('original')
+  const [bookmarked, setBookmarked] = useState(false)
+  const [graph, setGraph] = useState<any>(null)
+
+  useEffect(() => {
+    if (!doc?.id) return
+    fetch('/showroom/api/bookmarks')
+      .then(r => r.json())
+      .then(d => { if (d?.ids?.includes(doc.id)) setBookmarked(true) })
+      .catch(() => {})
+    fetch(`/showroom/api/documents/${doc.id}/graph`)
+      .then(r => r.json())
+      .then(d => { if (d?.edges) setGraph(d) })
+      .catch(() => {})
+  }, [doc?.id])
+
+  const toggleBookmark = async () => {
+    if (!doc?.id) return
+    if (bookmarked) {
+      await fetch(`/showroom/api/bookmarks?documentId=${encodeURIComponent(doc.id)}`, { method: 'DELETE' })
+      setBookmarked(false)
+    } else {
+      await fetch('/showroom/api/bookmarks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ documentId: doc.id }),
+      })
+      setBookmarked(true)
+    }
+  }
 
   useEffect(() => {
     const slug = decodeURIComponent(params.slug as string)
@@ -104,6 +133,14 @@ export default function DocPage() {
             <span className="text-[0.72rem] font-medium text-neutral-500 bg-neutral-100 px-2.5 py-1 rounded">
               {catLabels[doc.category] || doc.category}
             </span>
+            <button
+              onClick={toggleBookmark}
+              className={`text-[0.78rem] px-2.5 py-1 rounded border transition-colors ${
+                bookmarked ? 'bg-amber-50 border-amber-300 text-amber-700' : 'border-neutral-200 text-neutral-400 hover:border-neutral-400 hover:text-neutral-600'
+              }`}
+            >
+              {bookmarked ? '⭐ 已收藏' : '☆ 收藏'}
+            </button>
             <span className="text-[0.78rem] text-neutral-400">归属：{doc.ownerDept.name}</span>
             {doc.audiences?.length > 0 && (
               <span className="text-[0.78rem] text-neutral-400">适用：{doc.audiences.map(a => a.department.name).join('、')}</span>
@@ -184,6 +221,33 @@ export default function DocPage() {
           ownerDeptId: doc.ownerDeptId,
         }} />
       )}
+
+      {/* ── Document Graph: Related Documents ── */}
+      {graph?.edges && (
+        <section className="max-w-5xl mx-auto px-6 md:px-10 lg:px-16 pb-16">
+          <div className="border-t border-neutral-200 pt-8 mt-4">
+            <h3 className="text-[0.8rem] font-medium text-neutral-500 uppercase tracking-wider mb-4">🧩 关联文档</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {graph.edges.prerequisites?.length > 0 && <GraphBlock title="📌 前置文档" docs={graph.edges.prerequisites} />}
+              {graph.edges.sameStage?.length > 0 && <GraphBlock title="🔄 同阶段文档" docs={graph.edges.sameStage} />}
+              {graph.edges.relatedDocs?.length > 0 && <GraphBlock title="🔗 关联文档" docs={graph.edges.relatedDocs} />}
+            </div>
+          </div>
+        </section>
+      )}
+
     </main>
+  )
+}
+
+function GraphBlock({ title, docs }: { title: string; docs: any[] }) {
+  return (
+    <div className="bg-white border border-neutral-200 rounded-xl p-4">
+      <p className="text-[0.72rem] font-medium text-neutral-500 mb-2">{title}</p>
+      {docs.map((d: any) => (
+        <Link key={d.id} href={`/internal/docs/${d.audiences?.[0]?.department?.slug || d.ownerDept?.slug || 'general'}/${encodeURIComponent(d.slug)}`}
+          className="block px-2 py-1.5 -mx-2 rounded-md text-[0.82rem] text-neutral-700 hover:bg-neutral-50 no-underline">{d.title}</Link>
+      ))}
+    </div>
   )
 }

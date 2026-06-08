@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+Disallow: /internal/
+Sitemap: https://yuanshowroom.cn/showroom/sitemap.xml

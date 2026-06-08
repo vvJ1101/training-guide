@@ -1,0 +1,8 @@
+export { HeroSection } from './section-hero'
+export { NumbersSection } from './section-numbers'
+export { AboutSection } from './section-about'
+export { ServicesSection } from './section-services'
+export { BrandsSection } from './section-brands'
+export { ShowroomSection } from './section-showroom'
+export { SeasonsSection } from './section-seasons'
+export { ContactSection } from './section-contact'

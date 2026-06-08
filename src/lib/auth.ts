@@ -43,23 +43,10 @@ export async function hashPassword(password: string) {
   return hash(password, 12)
 }
 
-export async function getVisibleDeptIds(session: SessionUser): Promise<string[]> {
-  if (session.role === 'super_admin') {
-    const depts = await prisma.department.findMany({ select: { id: true } })
-    return depts.map(d => d.id)
-  }
-  // dept_admin and staff: only see departments in their company
-  if (session.companyId) {
-    const depts = await prisma.department.findMany({
-      where: { companyId: session.companyId },
-      select: { id: true },
-    })
-    return depts.map(d => d.id)
-  }
-  return session.departmentId ? [session.departmentId] : []
-}
+// ── Document permissions → @/lib/permissions/documents (SINGLE SOURCE OF TRUTH) ──
+// Import from there: canReadDocument, canEditDocument, getVisibleDocuments, canAccessAdminRoute
 
-// ── Unified RBAC Permission Functions ──
+// ── Unified RBAC Functions ──
 
 /** super_admin only: user management */
 export function canManageUsers(session: SessionUser): boolean {

@@ -48,6 +48,22 @@ export const PHASE1_SYSTEM_PROMPT = `你是一名企业文档结构分析器。
 - 图片 ID 格式：IMAGE_1, IMAGE_2...（按原文出现顺序编号）
 - 图片描述：从原文截图上下文提取（如"订单审核界面"）
 
+## 流程阶段识别（processStage）
+
+从以下标准阶段中选择最匹配的（单选，无匹配则用 "general"）：
+
+- **order** — 订单处理、下单、订单审核、订单管理
+- **payment** — 回款、付款、对账、财务结算
+- **shipping** — 发货、物流、出货指令
+- **audit** — 审核、审批、复核流程
+- **refund** — 退款、退货、退换货
+- **inventory** — 库存、采购、商品管理
+- **onboarding** — 入职、培训、新人相关
+- **general** — 无法归类
+
+在 extractedJson 中增加：
+"processStage": "order"
+
 ## 规则
 
 - 保留所有数字、时间、审批人、责任部门

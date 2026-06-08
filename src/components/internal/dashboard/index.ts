@@ -1,6 +1,0 @@
-export { HeroSearch } from './hero-search'
-export { WorkspaceSection } from './workspace-section'
-export { StatsCards } from './stats-cards'
-export { AICapabilities } from './ai-capabilities'
-export { PopularKnowledge } from './popular-knowledge'
-export { QuickActions } from './quick-actions'

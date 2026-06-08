@@ -12,7 +12,7 @@ export function InternalLayoutClient({ children }: { children: React.ReactNode }
       <InternalNav onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
       <div className="flex">
         <InternalSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-        <main className="flex-1 lg:pl-60 pt-16">
+        <main className="flex-1 lg:pl-60 pt-14 md:pt-16">
           {children}
         </main>
       </div>

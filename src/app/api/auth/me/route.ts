@@ -22,6 +22,7 @@ export async function GET(req: NextRequest) {
 
   return NextResponse.json({
     id: session.id,
+    name: (session as any).name || '',
     role: session.role,
     companyId: session.companyId,
     companyName: session.companyName || '',

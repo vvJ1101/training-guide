@@ -16,6 +16,7 @@ export async function POST(req: NextRequest) {
   const response = NextResponse.json({ ok: true, user })
   response.cookies.set('session', JSON.stringify({
     id: user.id,
+    name: user.name,
     role: user.role,
     companyId: user.companyId || '',
     companyName: (user as any).companyName || '',

@@ -1,16 +1,19 @@
 /**
- * YUAN SHOWROOM — Document Permission System v3
+ * YUAN SHOWROOM — Document Permission System v3 (FINAL)
+ *
+ * 🔐 SINGLE SOURCE OF TRUTH for all document permissions
  *
  * READ  ≠ WRITE
  * audience → READ only (never write)
  * ownerDepartmentId → READ + WRITE
- * companyId → never used for permissions
+ * companyId → never used for permissions (NO company fallback)
  * no departmentId → no access (unless super_admin)
  *
- * SECURITY RULE:
- *   All document queries must go through buildDocumentWhere() for READ filtering.
- *   All mutations must call canEditDocument() at the API layer.
- *   Frontend filtering is NOT a security layer.
+ * SECURITY RULES:
+ *   All document queries → getVisibleDocuments() (Prisma where)
+ *   All mutations → canEditDocument() at API layer
+ *   All admin routes → canAccessAdminRoute() at middleware
+ *   Frontend filtering is NOT a security layer
  */
 
 import type { SessionUser } from '@/lib/auth'
@@ -70,15 +73,19 @@ export function canEditDocument(user: SessionUser, docOwnerDeptId: string): bool
 /** Alias — delete uses same WRITE rule */
 export const canDeleteDocument = canEditDocument
 
-// ── Prisma Query Builder (READ only) ──
+// ── Prisma Query Builder (READ only) — SINGLE SOURCE OF TRUTH ──
 
 /**
- * Build Prisma `where` clause for document READ queries.
+ * 🔐 SINGLE SOURCE OF TRUTH for all document READ queries.
  *
- * Filters to only documents the user can READ.
- * Must NOT be used for WRITE permission — write must check at API layer.
+ * Returns a Prisma `where` clause that filters to only documents the user can READ.
+ * Must be used in EVERY `prisma.document.findMany/findFirst/count` call.
+ *
+ * Must NOT be used for WRITE permission — write must check `canEditDocument()` at API layer.
+ *
+ * Alias: `buildDocumentWhere` (backward compatible)
  */
-export function buildDocumentWhere(user: SessionUser): Record<string, unknown> {
+export function getVisibleDocuments(user: SessionUser): Record<string, unknown> {
   if (user.role === 'super_admin') return {}
   if (!user.departmentId) return { id: '__IMPOSSIBLE__' }
 
@@ -88,4 +95,32 @@ export function buildDocumentWhere(user: SessionUser): Record<string, unknown> {
       { audiences: { some: { departmentId: user.departmentId } } },
     ],
   }
+}
+
+/** @deprecated Use getVisibleDocuments() instead */
+export const buildDocumentWhere = getVisibleDocuments
+
+// ── Admin Route Access ──
+
+/**
+ * 🔐 Check if user can access a specific admin route.
+ * Used by middleware.ts for route-level access control.
+ */
+export function canAccessAdminRoute(user: SessionUser, pathname: string): boolean {
+  if (user.role === 'super_admin') return true
+
+  // User management: super_admin only
+  if (pathname.startsWith('/internal/admin/users') || pathname.startsWith('/api/users')) {
+    return false
+  }
+
+  // Policy upload: 时胜 + 品牌部 + dept_admin
+  if (pathname.startsWith('/internal/policy-upload') || pathname === '/api/admin/policy-upload') {
+    return user.companyName === '时胜' && user.departmentName === '品牌部'
+  }
+
+  // Policy view: all authenticated users
+  if (pathname.startsWith('/internal/policy')) return true
+
+  return true
 }
